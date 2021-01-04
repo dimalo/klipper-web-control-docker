@@ -3,7 +3,7 @@ version: '3.4'
 services:
   klipper:
     labels:
-      image: registry.gitlab.schmidt-in.space/dimalo/klipper-fluidd-docker/klipper
+      image: dimalo/klipper-moonraker
     build:
       dockerfile: ./klipper/Dockerfile
       context: .
@@ -21,7 +21,7 @@ services:
 
   fluidd:
     labels:
-      image: registry.gitlab.schmidt-in.space/dimalo/klipper-fluidd-docker/fluidd
+      image: dimalo/fluidd
     build:
       dockerfile: Dockerfile
       context: frontend
@@ -37,7 +37,7 @@ services:
 
   mainsail:
     labels:
-      image: registry.gitlab.schmidt-in.space/dimalo/klipper-fluidd-docker/mainsail
+      image: dimalo/mainsail
     build:
       dockerfile: Dockerfile
       context: frontend
