@@ -1,4 +1,4 @@
-name: Fluidd Multiarch Image CI
+name: Mainsail Multiarch Image CI
 
 on:
   push:
