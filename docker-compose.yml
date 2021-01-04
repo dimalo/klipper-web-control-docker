@@ -2,8 +2,7 @@ version: '3.4'
 
 services:
   klipper:
-    labels:
-      image: dimalo/klipper-moonraker
+    image: dimalo/klipper-moonraker
     build:
       dockerfile: ./klipper/Dockerfile
       context: .
@@ -20,8 +19,7 @@ services:
       # - /dev/ttyUSB0:/dev/ttyUSB0
 
   fluidd:
-    labels:
-      image: dimalo/fluidd
+    image: dimalo/fluidd
     build:
       dockerfile: Dockerfile
       context: frontend
@@ -36,8 +34,7 @@ services:
       - klipper:klipper
 
   mainsail:
-    labels:
-      image: dimalo/mainsail
+    image: dimalo/mainsail
     build:
       dockerfile: Dockerfile
       context: frontend
