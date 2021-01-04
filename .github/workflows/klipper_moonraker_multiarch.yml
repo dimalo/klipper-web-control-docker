@@ -61,3 +61,5 @@ jobs:
           platforms: linux/amd64,linux/arm64,linux/arm/v7
           push: true
           tags: ${{ steps.prep.outputs.tags }}
+          cache-from: type=registry,ref=${{ steps.prep.outputs.docker_image }}:latest
+          cache-to: type=inline
