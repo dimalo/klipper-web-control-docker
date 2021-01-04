@@ -6,13 +6,16 @@ services:
     build:
       dockerfile: ./klipper/Dockerfile
       context: .
+      # args:
+      #   DEVICE_GROUP: device
+      #   DEVICE_GID: 987
     container_name: klipper
     ports:
       - 7125:7125
     restart: unless-stopped
     volumes:
       - gcode_files:/home/klippy/gcode_files
-      - ./printer.cfg:/home/klippy/.config/printer.cfg
+      # - ./printer.cfg:/home/klippy/.config/printer.cfg
 
     #  mount serial device - take care to grant sufficient permissions to the device: <host_dev>:<container_dev>
     # devices:
