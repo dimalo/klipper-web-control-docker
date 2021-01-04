@@ -61,5 +61,5 @@ jobs:
           platforms: linux/amd64,linux/arm64,linux/arm/v7
           push: true
           tags: ${{ steps.prep.outputs.tags }}
-          build-args: 
-            - FRONTEND_ZIP_URL: https://github.com/cadriel/fluidd/releases/latest/download/fluidd.zip
+          build-args: |
+            FRONTEND_ZIP_URL=https://github.com/cadriel/fluidd/releases/latest/download/fluidd.zip
