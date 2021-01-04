@@ -1,0 +1,12 @@
+
+upstream apiserver {
+    #if you need to change your api port, edit it here
+    ip_hash;
+    server ${KLIPPER_HOST}:${KLIPPER_API_PORT};
+}
+
+upstream mjpgstreamer {
+    #if you need to change your webcam port, edit it here
+    ip_hash;
+    server ${JPEG_STREAM_HOST}:${JPEG_STREAM_PORT};
+}

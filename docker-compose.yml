@@ -1,0 +1,55 @@
+version: '3.4'
+
+services:
+  klipper:
+    labels:
+      image: registry.gitlab.schmidt-in.space/dimalo/klipper-fluidd-docker/klipper
+    build:
+      dockerfile: ./klipper/Dockerfile
+      context: .
+    container_name: klipper
+    ports:
+      - 7125:7125
+    restart: unless-stopped
+    volumes:
+      - gcode_files:/home/klippy/gcode_files
+      - ./printer.cfg:/home/klippy/.config/printer.cfg
+
+    #  mount serial device - take care to grant sufficient permissions to the device: <host_dev>:<container_dev>
+    # devices:
+      # - /dev/ttyUSB0:/dev/ttyUSB0
+
+  fluidd:
+    labels:
+      image: registry.gitlab.schmidt-in.space/dimalo/klipper-fluidd-docker/fluidd
+    build:
+      dockerfile: Dockerfile
+      context: frontend
+      args:
+        FRONTEND_ZIP_URL: https://github.com/cadriel/fluidd/releases/latest/download/fluidd.zip
+    container_name: fluidd
+    ports:
+      - 8010:80
+    depends_on: 
+      - klipper
+    links:
+      - klipper:klipper
+
+  mainsail:
+    labels:
+      image: registry.gitlab.schmidt-in.space/dimalo/klipper-fluidd-docker/mainsail
+    build:
+      dockerfile: Dockerfile
+      context: frontend
+      args:
+        FRONTEND_ZIP_URL: https://github.com/meteyou/mainsail/releases/latest/download/mainsail.zip
+    container_name: mainsail
+    ports:
+      - 8011:80
+    depends_on: 
+      - klipper
+    links:
+      - klipper:klipper
+
+volumes: 
+  gcode_files:
