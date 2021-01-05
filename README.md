@@ -99,6 +99,7 @@ After build run ```docker-compose up -d``` and see if it works.
 
 ## Credits
 - where I found some of the macros
+  - [https://github.com/fl0r1s/klipper_config](https://github.com/fl0r1s/klipper_config)
 - Klipper
 - Moonraker
 - Fluidd
