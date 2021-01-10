@@ -40,7 +40,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install git gcc locales supervisor -y && \
+    apt-get install git gcc locales supervisor libjpeg62-turbo libtiff5 -y && \
     sed -i -e 's/# en_GB.UTF-8 UTF-8/en_GB.UTF-8 UTF-8/' /etc/locale.gen && \
     locale-gen && \
     # Clean up
@@ -67,6 +67,7 @@ RUN useradd --user-group --no-log-init --shell /bin/false ${USER} && \
     usermod -a -G tty ${USER} && \
     usermod -a -G dialout ${USER} && \
     mkdir -p /var/log/supervisor && \
+    mkdir -p /var/log/klipper && chown ${USER}:${USER} /var/log/klipper && \
     pip install --no-cache supervisord-dependent-startup
 
 USER ${USER}
