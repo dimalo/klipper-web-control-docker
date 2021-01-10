@@ -5,6 +5,7 @@
 # klipper-web-control-docker
 __Klipper with Moonraker shipped with Fluidd and/or Mainsail__
 
+- get your printer to the next level!
 - Docker Compose config and Dockerfiles provided!
 - Build with Github actions and deployed to https://hub.docker.com/u/dimalo
 - Docker multiarch builds with best practices
@@ -27,7 +28,13 @@ __Klipper with Moonraker shipped with Fluidd and/or Mainsail__
 
     Example for PrusaSlicer start gcode:
 
-    ```START_PRINT T_BED=[first_layer_bed_temperature] T_EXTRUDER=[first_layer_temperature]```
+    ```
+    ; Making sure PrusaSlicer doesn't inject heatup gcode...
+    M104 S0
+    M190 S0
+    ; Run START_PRINT macro
+    START_PRINT T_BED=[first_layer_bed_temperature] T_EXTRUDER=[first_layer_temperature]
+    ```
 
   - several versions of pause/cancel/end, to either present the toolhead or the print (and get the toolhead out of the way) - ___check the defaults!___
 
@@ -36,6 +43,7 @@ __Klipper with Moonraker shipped with Fluidd and/or Mainsail__
   - support delay with display output with ```COUNTDOWN```
 
   ___Please be careful to not run the macros without making sure they work with your printer!___
+- collection of calibration macros (for example manual bed leveling) [see calibration_macros.cfg](./config/calibration_macros.cfg)
 - complete Klipper setup with web control client
   - supports [Fluidd](https://github.com/cadriel/fluidd)
   - supports [Mainsail](https://github.com/meteyou/mainsail)
@@ -58,7 +66,7 @@ ___Prerequisites:___
 1. modify docker-compose.yml to your needs
     - set serial port of your printer
     - mount printer.cfg if already prepared (else you will be able to set it up later as well...)
-1. run ```docker-compose up```
+1. run ```docker-compose pull && docker-compose up``` if you want to use the provided dockerhub images, else run ```docker-compose up``` to first build them on your host
 1. watch the services being set up
     - make sure you have no port conflicts on 7125, 8010 and 8011 
     - make sure klipper and moonraker started
