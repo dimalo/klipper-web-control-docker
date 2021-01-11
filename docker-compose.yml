@@ -22,12 +22,7 @@ services:
       # - /dev/ttyUSB0:/dev/ttyUSB0
 
   fluidd:
-    image: dimalo/fluidd
-    build:
-      dockerfile: Dockerfile
-      context: frontend
-      args:
-        FRONTEND_ZIP_URL: https://github.com/cadriel/fluidd/releases/latest/download/fluidd.zip
+    image: cadriel/fluidd
     container_name: fluidd
     ports:
       - 8010:80
