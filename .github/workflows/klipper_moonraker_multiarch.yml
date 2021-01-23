@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+  schedule:
+    - cron:  '42 12 * * SUN'
 
 jobs:
   docker:
