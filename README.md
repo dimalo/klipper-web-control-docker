@@ -98,10 +98,9 @@ Run ```docker-compose build```
 After build run ```docker-compose up -d``` and see if it works.
 
 ## Features not implemented or not tested (yet)
-- compiling klipper.bin for your printer
-- setting up more than one klipper instance and connecting to all in the UI
-- automatic updates for klipper/moonraker
-- automatic updates for the frontend
+- compiling klipper.bin for your printer (will need compile tools which bloat the image so this will likely not be implemented)
+- automatic updates for klipper/moonraker (partly working as repos are getting updated but no dependency installs happen - update the container with ```docker-compose pull``` instead)
+- automatic updates for the frontend (update the container with ```docker-compose pull``` instead)
 - CI pipeline to build images as upstream repos change
 
 ## Credits
