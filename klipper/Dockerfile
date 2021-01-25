@@ -69,7 +69,7 @@ ENV MOONRAKER_VENV_DIR=${HOME}/moonraker-env
 ARG DEVICE_GROUP=device
 ARG DEVICE_GID=987
 
-RUN useradd --user-group --no-log-init --shell /bin/false ${USER} && \
+RUN useradd --user-group --no-log-init --shell /bin/false -m -d ${HOME} ${USER} && \
     groupadd -g ${DEVICE_GID} ${DEVICE_GROUP} && \
     usermod -a -G ${DEVICE_GROUP} ${USER} && \
     usermod -a -G tty ${USER} && \
@@ -81,8 +81,8 @@ RUN useradd --user-group --no-log-init --shell /bin/false ${USER} && \
 USER ${USER}
 WORKDIR ${HOME}
 
-RUN mkdir ${HOME}/gcode_files && \
-    mkdir ${CONFIG_DIR} && \
+RUN mkdir -p ${HOME}/gcode_files && \
+    mkdir -p ${CONFIG_DIR} && \
     touch ${HOME}/.moonraker_api_key
 VOLUME ${HOME}/gcode_files
 VOLUME ${CONFIG_DIR}
