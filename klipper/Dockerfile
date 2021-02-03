@@ -1,4 +1,4 @@
-FROM python:buster as builder
+FROM python:3.9-buster as builder
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -34,7 +34,7 @@ RUN ${MOONRAKER_VENV_DIR}/bin/python -m pip install pip -U
 RUN ${MOONRAKER_VENV_DIR}/bin/pip install wheel gpiod
 RUN ${MOONRAKER_VENV_DIR}/bin/pip install -r moonraker/scripts/moonraker-requirements.txt
 
-FROM python:slim-buster as image
+FROM python:3.9-slim-buster as image
 
 ARG DEBIAN_FRONTEND=noninteractive
 
