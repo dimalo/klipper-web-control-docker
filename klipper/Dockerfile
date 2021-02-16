@@ -79,7 +79,6 @@ RUN useradd --user-group --no-log-init --shell /bin/false -m -d ${HOME} ${USER} 
     pip install --no-cache supervisord-dependent-startup gpiod
 
 RUN mkdir -p /usr/lib/python3 && ln -s /usr/local/lib/python3.9/site-packages /usr/lib/python3/dist-packages
-RUN mkdir -p ${HOME}/moonraker-env/lib/ && ln -s ${HOME}/moonraker-env/lib/python3.9 ${HOME}/moonraker-env/lib/python3.7
 
 USER ${USER}
 WORKDIR ${HOME}
