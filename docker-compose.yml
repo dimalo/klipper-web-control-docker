@@ -15,26 +15,50 @@ services:
     restart: unless-stopped
     volumes:
       - gcode_files:/home/klippy/gcode_files
+      # be aware to create your own branch if you mount the config folder as it will be updated on the main branch
+      # that way you can merge upstream changes to your (developed) configs...
+      - ./config:/home/klippy/.config
       # - ./printer.cfg:/home/klippy/.config/printer.cfg
 
     #  mount serial device - take care to grant sufficient permissions to the device: <host_dev>:<container_dev>
     # devices:
       # - /dev/ttyUSB0:/dev/ttyUSB0
 
-  fluidd:
-    image: dimalo/fluidd
+  klipper_another_printer:
+    image: dimalo/klipper-moonraker
     build:
-      dockerfile: Dockerfile
-      context: frontend
-      args:
-        FRONTEND_ZIP_URL: https://github.com/cadriel/fluidd/releases/latest/download/fluidd.zip
+      dockerfile: ./klipper/Dockerfile
+      context: .
+      # args:
+      #   DEVICE_GROUP: device
+      #   DEVICE_GID: 987
+    container_name: klipper_another_printer
+    ports:
+      - 7126:7125
+    restart: unless-stopped
+    volumes:
+      - gcode_files:/home/klippy/gcode_files
+      # be aware to create your own branch if you mount the config folder as it will be updated on the main branch
+      # that way you can merge upstream changes to your (developed) configs...
+      - ./config_another_printer:/home/klippy/.config
+      # - ./another_printer.cfg:/home/klippy/.config/printer.cfg
+
+    #  mount serial device - take care to grant sufficient permissions to the device: <host_dev>:<container_dev>
+    # devices:
+      # - /dev/ttyACM0:/dev/ttyACM0
+
+
+  fluidd:
+    image: cadriel/fluidd
     container_name: fluidd
     ports:
       - 8010:80
     depends_on: 
       - klipper
+      # - klipper_another_printer
     links:
       - klipper:klipper
+      # - klipper_another_printer:klipper_another_printer
 
   mainsail:
     image: dimalo/mainsail

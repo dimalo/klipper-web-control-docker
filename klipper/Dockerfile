@@ -1,4 +1,4 @@
-FROM python:buster as builder
+FROM python:3.9-buster as builder
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -34,13 +34,21 @@ RUN ${MOONRAKER_VENV_DIR}/bin/python -m pip install pip -U
 RUN ${MOONRAKER_VENV_DIR}/bin/pip install wheel gpiod
 RUN ${MOONRAKER_VENV_DIR}/bin/pip install -r moonraker/scripts/moonraker-requirements.txt
 
-FROM python:slim-buster as image
+FROM python:3.9-slim-buster as image
 
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install git gcc locales supervisor -y && \
+    apt-get install -y \
+    git \
+    gcc \
+    locales \
+    supervisor \
+    libjpeg62-turbo \
+    libtiff5 \
+    gpiod \
+    libopenjp2-7 && \
     sed -i -e 's/# en_GB.UTF-8 UTF-8/en_GB.UTF-8 UTF-8/' /etc/locale.gen && \
     locale-gen && \
     # Clean up
@@ -61,19 +69,22 @@ ENV MOONRAKER_VENV_DIR=${HOME}/moonraker-env
 ARG DEVICE_GROUP=device
 ARG DEVICE_GID=987
 
-RUN useradd --user-group --no-log-init --shell /bin/false ${USER} && \
+RUN useradd --user-group --no-log-init --shell /bin/false -m -d ${HOME} ${USER} && \
     groupadd -g ${DEVICE_GID} ${DEVICE_GROUP} && \
     usermod -a -G ${DEVICE_GROUP} ${USER} && \
     usermod -a -G tty ${USER} && \
     usermod -a -G dialout ${USER} && \
     mkdir -p /var/log/supervisor && \
-    pip install --no-cache supervisord-dependent-startup
+    mkdir -p /var/log/klipper && chown ${USER}:${USER} /var/log/klipper && \
+    pip install --no-cache supervisord-dependent-startup gpiod
+
+RUN mkdir -p /usr/lib/python3 && ln -s /usr/local/lib/python3.9/site-packages /usr/lib/python3/dist-packages
 
 USER ${USER}
 WORKDIR ${HOME}
 
-RUN mkdir ${HOME}/gcode_files && \
-    mkdir ${CONFIG_DIR} && \
+RUN mkdir -p ${HOME}/gcode_files && \
+    mkdir -p ${CONFIG_DIR} && \
     touch ${HOME}/.moonraker_api_key
 VOLUME ${HOME}/gcode_files
 VOLUME ${CONFIG_DIR}
