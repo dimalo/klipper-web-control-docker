@@ -5,7 +5,7 @@ on:
     branches:
       - main
   schedule:
-    - cron:  '24 12 * * SUN'
+    - cron: "24 12 * * SUN"
 
 jobs:
   docker:
@@ -14,18 +14,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y%m%d-%H%M')"
+
       - name: Prepare
         id: prep
         run: |
           DOCKER_IMAGE=${{ secrets.DOCKER_USERNAME }}/mainsail
           VERSION=latest
-          SHORTREF=${GITHUB_SHA::8}
+          DATE=${{steps.date.outputs.date}}
 
           # If this is git tag, use the tag name as a docker tag
           if [[ $GITHUB_REF == refs/tags/* ]]; then
             VERSION=${GITHUB_REF#refs/tags/v}
           fi
-          TAGS="${DOCKER_IMAGE}:${VERSION},${DOCKER_IMAGE}:${SHORTREF}"
+          TAGS="${DOCKER_IMAGE}:${VERSION},${DOCKER_IMAGE}:${DATE}"
 
           # If the VERSION looks like a version number, assume that
           # this is the most recent version of the image and also

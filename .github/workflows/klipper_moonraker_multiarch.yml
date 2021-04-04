@@ -5,7 +5,7 @@ on:
     branches:
       - main
   schedule:
-    - cron:  '42 12 * * SUN'
+    - cron: "42 12 * * SUN"
 
 jobs:
   docker:
@@ -13,10 +13,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      
+
       - name: Get current date
         id: date
-        run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+        run: echo "::set-output name=date::$(date +'%Y%m%d-%H%M')"
 
       - name: Prepare
         id: prep
