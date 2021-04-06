@@ -49,6 +49,9 @@ RUN apt-get update && \
     libtiff5 \
     gpiod \
     libopenjp2-7 && \
+    rsync \
+    zlib1g-dev \
+    python3-libgpiod \
     sed -i -e 's/# en_GB.UTF-8 UTF-8/en_GB.UTF-8 UTF-8/' /etc/locale.gen && \
     locale-gen && \
     # Clean up
