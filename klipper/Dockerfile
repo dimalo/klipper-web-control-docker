@@ -1,4 +1,4 @@
-FROM python:3.9-buster as builder
+FROM python:3.9 as builder
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -34,7 +34,7 @@ RUN ${MOONRAKER_VENV_DIR}/bin/python -m pip install pip -U
 RUN ${MOONRAKER_VENV_DIR}/bin/pip install wheel gpiod
 RUN ${MOONRAKER_VENV_DIR}/bin/pip install -r moonraker/scripts/moonraker-requirements.txt
 
-FROM python:3.9-slim-buster as image
+FROM python:3.9-slim as image
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -48,10 +48,10 @@ RUN apt-get update && \
     libjpeg62-turbo \
     libtiff5 \
     gpiod \
-    libopenjp2-7 && \
+    libopenjp2-7 \
     rsync \
     zlib1g-dev \
-    python3-libgpiod \
+    python3-libgpiod && \
     sed -i -e 's/# en_GB.UTF-8 UTF-8/en_GB.UTF-8 UTF-8/' /etc/locale.gen && \
     locale-gen && \
     # Clean up
