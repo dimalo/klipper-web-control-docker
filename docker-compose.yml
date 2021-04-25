@@ -78,9 +78,9 @@ services:
     container_name: mainsail
     ports:
       - 8011:80
-      depends_on: 
-        - klipper
-        # - klipper_another_printer
+    depends_on: 
+      - klipper
+      # - klipper_another_printer
     links:
       - klipper:klipper
       # - klipper_another_printer:klipper_another_printer
