@@ -10,7 +10,7 @@ __Klipper with Moonraker shipped with Fluidd and/or Mainsail__
 - Docker multiarch builds with best practices
 
 ## Features
-- Dockerhub images support x64, ARM64 & ARM32v7 
+- Dockerhub images support x64, ARM64, ARM32v7 & ARM32v6
 - Docker multistage builds for optimized image sizes
 - fully integrated klipper image with moonraker enabled
   - startup management with supervisord & dependent startup (klipper starts first, then only if klipper is running moonraker is started)
@@ -58,6 +58,7 @@ ___Prerequisites:___
 - _You have docker and docker-compose installed on your machine_
 - _You have flashed your printer with the appropriate .bin_
 - _You have your printer connected to your machine and you know it's serial mount point (e.g. /dev/ttyACM0 or /dev/ttyUSB0)_
+- _ARM32v6 (Raspberry Pi Zero and 1) requires [Docker 20](https://docs.docker.com/engine/install/debian/#install-using-the-convenience-script). Fluidd is not yet supported_
 
 ### Install the services
 
