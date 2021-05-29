@@ -5,7 +5,7 @@ on:
     branches:
       - main
   schedule:
-    - cron: "42 12 * * SUN"
+    - cron: "42 13 * * 2,5,7"
 
 jobs:
   docker:
