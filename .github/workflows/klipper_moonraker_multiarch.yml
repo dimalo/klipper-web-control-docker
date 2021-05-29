@@ -23,25 +23,31 @@ jobs:
         id: prep
         run: |
           DOCKER_IMAGE=${{ secrets.DOCKER_USERNAME }}/klipper-moonraker
-          VERSION=latest
           DATE=${{steps.date.outputs.date}}
           BRANCH=${GITHUB_REF##*/}
-
-          if [[ $BRANCH == 'develop' ]]; then
-            VERSION=next
-          fi
 
           # If this is git tag, use the tag name as a docker tag
           if [[ $GITHUB_REF == refs/tags/* ]]; then
             VERSION=${GITHUB_REF#refs/tags/v}
           fi
-          TAGS="${DOCKER_IMAGE}:${VERSION},${DOCKER_IMAGE}:${DATE}"
 
-          # If the VERSION looks like a version number, assume that
-          # this is the most recent version of the image and also
-          # tag it 'latest'.
-          if [[ $VERSION =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
-            TAGS="$TAGS,${DOCKER_IMAGE}:latest"
+          if [[ $BRANCH == develop ]]; then
+            # If the BRANCH is 'develop', assume that
+            # this is the next version of the image and also
+            # tag with DATE.
+            BASE_TAG=next
+            TAGS="${DOCKER_IMAGE}:${BASE_TAG},${DOCKER_IMAGE}:${DATE}-dev"
+          else
+            # If the VERSION looks like a version number, assume that
+            # this is the latest version of the image and also
+            # tag it with the VERSION, else use DATE.
+            BASE_TAG=latest
+            if [[ $VERSION =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+              TAGS="$TAGS,${DOCKER_IMAGE}:${BASE_TAG}"
+            else
+              TAGS="${DOCKER_IMAGE}:${BASE_TAG},${DOCKER_IMAGE}:${DATE}"
+            fi
+
           fi
 
           # Set output parameters.
