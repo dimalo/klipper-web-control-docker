@@ -76,7 +76,9 @@ jobs:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
           file: ./klipper/Dockerfile
-          platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
+          # TODO: fix arm/v6 build (rustup failing)
+          # platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6
           push: true
           tags: ${{ steps.prep.outputs.tags }}
           cache-from: type=registry,ref=${{ steps.prep.outputs.docker_image }}:latest
