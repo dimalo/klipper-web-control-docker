@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - develop
   schedule:
     - cron: "42 13 * * 0,2,5"
 
@@ -24,6 +25,11 @@ jobs:
           DOCKER_IMAGE=${{ secrets.DOCKER_USERNAME }}/klipper-moonraker
           VERSION=latest
           DATE=${{steps.date.outputs.date}}
+          BRANCH=${GITHUB_REF##*/}
+
+          if [[ $BRANCH == 'develop' ]]; then
+            VERSION=next
+          fi
 
           # If this is git tag, use the tag name as a docker tag
           if [[ $GITHUB_REF == refs/tags/* ]]; then
