@@ -9,7 +9,7 @@ ARG MOONRAKER_VENV_DIR=${HOME}/moonraker-env
 
 RUN useradd -d ${HOME} -ms /bin/bash ${USER}
 RUN apt-get update && \
-    apt-get install -y locales git sudo wget gzip tar python-virtualenv virtualenv python-dev libffi-dev libncurses-dev libusb-dev gpiod python3-virtualenv python3-dev libopenjp2-7 python3-libgpiod
+    apt-get install -y locales git sudo wget curl gzip tar python-virtualenv virtualenv python-dev libffi-dev libncurses-dev libusb-dev gpiod python3-virtualenv python3-dev libopenjp2-7 python3-libgpiod
 RUN sed -i -e 's/# en_GB.UTF-8 UTF-8/en_GB.UTF-8 UTF-8/' /etc/locale.gen
 RUN locale-gen
 
@@ -32,6 +32,7 @@ RUN git clone https://github.com/Arksine/moonraker.git
 RUN [ ! -d ${MOONRAKER_VENV_DIR} ] && python3 -m venv ${MOONRAKER_VENV_DIR}
 RUN ${MOONRAKER_VENV_DIR}/bin/python -m pip install pip -U
 RUN ${MOONRAKER_VENV_DIR}/bin/pip install wheel gpiod
+RUN curl https://sh.rustup.rs -sSf | sh -s -- --profile minimal -y
 RUN ${MOONRAKER_VENV_DIR}/bin/pip install -r moonraker/scripts/moonraker-requirements.txt
 
 FROM python:3.9-slim as image
