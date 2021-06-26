@@ -53,6 +53,7 @@ jobs:
           # Set output parameters.
           echo ::set-output name=tags::${TAGS}
           echo ::set-output name=docker_image::${DOCKER_IMAGE}
+          echo ::set-output name=base_tag::${BASE_TAG}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@master
@@ -79,5 +80,5 @@ jobs:
           platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6
           push: true
           tags: ${{ steps.prep.outputs.tags }}
-          cache-from: type=registry,ref=${{ steps.prep.outputs.docker_image }}:latest
+          cache-from: type=registry,ref=${{ steps.prep.outputs.docker_image }}:${{ steps.prep.outputs.base_tag }}
           cache-to: type=inline
