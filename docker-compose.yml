@@ -59,6 +59,9 @@ services:
 
   fluidd:
     image: cadriel/fluidd
+    # build:
+    #   dockerfile: Dockerfile
+    #   context: frontend
     container_name: fluidd
     ports:
       - 8010:80
