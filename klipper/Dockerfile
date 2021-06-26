@@ -32,7 +32,6 @@ RUN git clone https://github.com/Arksine/moonraker.git
 RUN [ ! -d ${MOONRAKER_VENV_DIR} ] && python3 -m venv ${MOONRAKER_VENV_DIR}
 RUN ${MOONRAKER_VENV_DIR}/bin/python -m pip install pip -U
 RUN ${MOONRAKER_VENV_DIR}/bin/pip install wheel gpiod
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
 RUN ${MOONRAKER_VENV_DIR}/bin/pip install -r moonraker/scripts/moonraker-requirements.txt
 
