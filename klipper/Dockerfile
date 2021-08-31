@@ -22,6 +22,8 @@ WORKDIR ${HOME}
 
 ### Klipper setup ###
 RUN git clone https://github.com/KevinOConnor/klipper.git
+RUN sed -i 's/0.4.15/0.4.17/g' klipper/scripts/klippy-requirements.txt
+RUN sed -i 's/1.12.2/1.12.3/g' klipper/scripts/klippy-requirements.txt
 RUN [ ! -d ${KLIPPER_VENV_DIR} ] && virtualenv ${KLIPPER_VENV_DIR}
 RUN ${KLIPPER_VENV_DIR}/bin/python -m pip install pip -U
 RUN ${KLIPPER_VENV_DIR}/bin/pip install wheel
