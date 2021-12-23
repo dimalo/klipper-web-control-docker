@@ -87,7 +87,7 @@ RUN useradd --user-group --no-log-init --shell /bin/false -m -d ${HOME} ${USER} 
     mkdir -p /var/log/klipper && chown ${USER}:${USER} /var/log/klipper ${HOME} && \
     pip install --no-cache supervisord-dependent-startup gpiod
 
-RUN mkdir -p /usr/lib/python3 && ln -s /usr/local/lib/python3.9/site-packages /usr/lib/python3/dist-packages
+RUN mkdir -p /usr/lib/python3 && ln -s /usr/local/lib/python3.10/site-packages /usr/lib/python3/dist-packages
 
 USER ${USER}
 WORKDIR ${HOME}
