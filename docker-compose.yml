@@ -62,6 +62,7 @@ services:
     # build:
     #   dockerfile: Dockerfile
     #   context: frontend
+    restart: unless-stopped
     container_name: fluidd
     ports:
       - 8010:80
