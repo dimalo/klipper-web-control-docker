@@ -1,6 +1,8 @@
 FROM python:3.10 as builder
 
 ARG DEBIAN_FRONTEND=noninteractive
+ARG KLIPPER_BRANCH="master"
+ARG MOONRAKER_BRANCH="master"
 
 ARG USER=klippy
 ARG HOME=/home/${USER}
@@ -22,14 +24,14 @@ USER ${USER}
 WORKDIR ${HOME}
 
 ### Klipper setup ###
-RUN git clone https://github.com/KevinOConnor/klipper.git
+RUN git clone --single-branch --branch ${KLIPPER_BRANCH} https://github.com/Klipper3d/klipper.git klipper
 RUN [ ! -d ${KLIPPER_VENV_DIR} ] && virtualenv -p python2 ${KLIPPER_VENV_DIR}
 RUN ${KLIPPER_VENV_DIR}/bin/python -m pip install pip -U
 RUN ${KLIPPER_VENV_DIR}/bin/pip install wheel
 RUN ${KLIPPER_VENV_DIR}/bin/pip install -r klipper/scripts/klippy-requirements.txt
 
 # Install moonraker
-RUN git clone https://github.com/Arksine/moonraker.git
+RUN git clone --single-branch --branch ${MOONRAKER_BRANCH} https://github.com/Arksine/moonraker.git moonraker
 RUN [ ! -d ${MOONRAKER_VENV_DIR} ] && python3 -m venv ${MOONRAKER_VENV_DIR}
 RUN ${MOONRAKER_VENV_DIR}/bin/python -m pip install pip -U
 RUN ${MOONRAKER_VENV_DIR}/bin/pip install wheel gpiod
