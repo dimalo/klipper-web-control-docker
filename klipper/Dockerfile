@@ -11,7 +11,7 @@ ARG MOONRAKER_VENV_DIR=${HOME}/moonraker-env
 
 RUN useradd -d ${HOME} -ms /bin/bash ${USER}
 RUN apt-get update && \
-    apt-get install -y locales git sudo wget curl gzip tar python2 virtualenv python-dev libffi-dev build-essential libncurses-dev libusb-dev gpiod python3-virtualenv python3-dev libopenjp2-7 python3-libgpiod liblmdb0 libsodium-dev
+    apt-get install -y locales git sudo wget curl gzip tar python2 virtualenv python-dev libffi-dev build-essential libncurses-dev libusb-dev gpiod python3-virtualenv python3-dev libopenjp2-7 python3-libgpiod liblmdb-dev libsodium-dev
 
 RUN sed -i -e 's/# en_GB.UTF-8 UTF-8/en_GB.UTF-8 UTF-8/' /etc/locale.gen
 RUN locale-gen
@@ -44,22 +44,24 @@ ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \
     apt-get install -y \
-    git \
+    curl \
     gcc \
-    locales \
-    supervisor \
-    nginx \
-    curl libcurl4-openssl-dev libssl-dev \
-    libjpeg62-turbo \
-    libtiff5 \
+    git \
     gpiod \
+    iproute2 \
+    libcurl4-openssl-dev \
+    libjpeg-dev \
+    liblmdb-dev \
     libopenjp2-7 \
-    rsync \
-    liblmdb0 \
     libsodium-dev \
-    zlib1g-dev \
+    libssl-dev \
+    libtiff5 \
+    locales \
     python2 \
-    python3-libgpiod && \
+    python3-libgpiod \
+    rsync \
+    supervisor \
+    zlib1g-dev && \
     sed -i -e 's/# en_GB.UTF-8 UTF-8/en_GB.UTF-8 UTF-8/' /etc/locale.gen && \
     locale-gen && \
     # Clean up
@@ -87,9 +89,8 @@ RUN useradd --user-group --no-log-init --shell /bin/false -m -d ${HOME} ${USER} 
     usermod -a -G dialout ${USER} && \
     mkdir -p /var/log/supervisor && \
     mkdir -p /var/log/klipper && chown ${USER}:${USER} /var/log/klipper ${HOME} && \
-    pip install --no-cache supervisord-dependent-startup gpiod
-
-RUN mkdir -p /usr/lib/python3 && ln -s /usr/local/lib/python3.10/site-packages /usr/lib/python3/dist-packages
+    pip install --no-cache supervisord-dependent-startup gpiod && \
+    mkdir -p /usr/lib/python3 && ln -s /usr/local/lib/python3.10/site-packages /usr/lib/python3/dist-packages
 
 USER ${USER}
 WORKDIR ${HOME}
