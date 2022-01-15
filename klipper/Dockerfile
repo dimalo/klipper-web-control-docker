@@ -1,4 +1,4 @@
-FROM python:3.10 as builder
+FROM python:3.10-bullseye as builder
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG KLIPPER_BRANCH="master"
@@ -38,7 +38,7 @@ RUN ${MOONRAKER_VENV_DIR}/bin/pip install wheel gpiod
 
 RUN ${MOONRAKER_VENV_DIR}/bin/pip install -r moonraker/scripts/moonraker-requirements.txt
 
-FROM python:3.10-slim as image
+FROM python:3.10-slim-bullseye as image
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -90,14 +90,13 @@ RUN useradd --user-group --no-log-init --shell /bin/false -m -d ${HOME} ${USER} 
     mkdir -p /var/log/supervisor && \
     mkdir -p /var/log/klipper && chown ${USER}:${USER} /var/log/klipper ${HOME} && \
     pip install --no-cache supervisord-dependent-startup gpiod && \
-    mkdir -p /usr/lib/python3 && ln -s /usr/local/lib/python3.10/site-packages /usr/lib/python3/dist-packages
+    mkdir -p /usr/lib/python3 && \
+    ln -s /usr/local/lib/python3.10/site-packages /usr/lib/python3/dist-packages
 
 USER ${USER}
 WORKDIR ${HOME}
 
-RUN mkdir -p ${HOME}/gcode_files && \
-    mkdir -p ${CONFIG_DIR} && \
-    mkdir -p ${HOME}/.moonraker_database
+RUN mkdir -p ${HOME}/gcode_files ${CONFIG_DIR} ${HOME}/.moonraker ${HOME}/.moonraker_database ${HOME}/.klipper_repo_backup ${HOME}/.moonraker_repo_backup
 
 VOLUME ${HOME}/gcode_files
 VOLUME ${CONFIG_DIR}
