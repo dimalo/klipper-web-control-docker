@@ -1,11 +1,11 @@
-FROM debian as unzip
+FROM alpine as unzip
 
 ARG FRONTEND_ZIP_URL=https://github.com/cadriel/fluidd/releases/latest/download/fluidd.zip
 
 WORKDIR /frontend
 
 ADD ${FRONTEND_ZIP_URL} /tmp/frontend.zip
-RUN DEBIAN_FRONTEND=noninteractive && apt-get update && apt-get install -y unzip
+RUN DEBIAN_FRONTEND=noninteractive && apk update && apk add unzip
 RUN unzip /tmp/frontend.zip -d /frontend
 
 FROM nginx:alpine as image
