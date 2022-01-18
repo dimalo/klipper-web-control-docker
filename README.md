@@ -1,6 +1,14 @@
 ![Mainsail Multiarch Image CI](https://github.com/dimalo/klipper-web-control-docker/workflows/Mainsail%20Multiarch%20Image%20CI/badge.svg)
 ![Klipper Moonraker Multiarch Image CI](https://github.com/dimalo/klipper-web-control-docker/workflows/Klipper%20Moonraker%20Multiarch%20Image%20CI/badge.svg)
 
+- [klipper-web-control-docker](#klipper-web-control-docker)
+  - [Features](#features)
+  - [Getting started](#getting-started)
+    - [Install the services](#install-the-services)
+    - [If things are running fine now...](#if-things-are-running-fine-now)
+    - [If things are not running...](#if-things-are-not-running)
+  - [Features not implemented or not tested (yet)](#features-not-implemented-or-not-tested-yet)
+  - [Credits](#credits)
 # klipper-web-control-docker
 __Klipper with Moonraker shipped with Fluidd and/or Mainsail__
 
@@ -98,6 +106,19 @@ Run ```docker-compose build```
 
 After build run ```docker-compose up -d``` and see if it works.
 
+__Klipper is crashing:__
+
+(from [#25](https://github.com/dimalo/klipper-web-control-docker/issues/25))
+
+_Klipper crashes with log similar to:_
+```log
+klipper Fatal Python error: pyinit_main: can't initialize time
+klipper | Python runtime state: core initialized
+klipper | PermissionError: [Errno 1] Operation not permitted
+```
+
+
+check your libseccomp version and update if needed (see [https://docs.linuxserver.io/faq#libseccomp](https://docs.linuxserver.io/faq#libseccomp))
 ## Features not implemented or not tested (yet)
 - compiling klipper.bin for your printer (will need compile tools which bloat the image so this will likely not be implemented)
 - automatic updates for klipper/moonraker (partly working as repos are getting updated but no dependency installs happen - update the container with ```docker-compose pull``` instead)
