@@ -30,6 +30,10 @@ RUN ${KLIPPER_VENV_DIR}/bin/python -m pip install pip -U
 RUN ${KLIPPER_VENV_DIR}/bin/pip install wheel
 RUN ${KLIPPER_VENV_DIR}/bin/pip install -r klipper/scripts/klippy-requirements.txt
 
+COPY klipper/.config_linux /home/klippy/klipper/.config
+
+RUN cd ${HOME}/klipper && make
+
 # Install moonraker
 RUN git clone --single-branch --branch ${MOONRAKER_BRANCH} https://github.com/Arksine/moonraker.git moonraker
 RUN [ ! -d ${MOONRAKER_VENV_DIR} ] && python3 -m venv ${MOONRAKER_VENV_DIR}
@@ -105,12 +109,13 @@ EXPOSE 7125
 
 USER root
 
+COPY --chown=${USER}:${USER} --from=builder ${HOME}/klipper/out/klipper.elf /usr/local/bin/klipper_mcu
 COPY --chown=${USER}:${USER} --from=builder ${HOME}/klipper ${HOME}/klipper
 COPY --chown=${USER}:${USER} --from=builder ${KLIPPER_VENV_DIR} ${KLIPPER_VENV_DIR}
 COPY --chown=${USER}:${USER} --from=builder ${HOME}/moonraker ${HOME}/moonraker
 COPY --chown=${USER}:${USER} --from=builder ${MOONRAKER_VENV_DIR} ${MOONRAKER_VENV_DIR}
 COPY --chown=${USER}:${USER} config ${CONFIG_DIR}
 
-COPY klipper/supervisord.conf /etc/supervisord/conf.d/supervisord.conf
-COPY klipper/*.ini /etc/supervisord/
-CMD ["supervisord", "-c", "/etc/supervisord/conf.d/supervisord.conf"]
+COPY klipper/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY klipper/*.ini /etc/supervisor/
+CMD ["supervisord", "-c", "/etc/supervisor/supervisord.conf"]
