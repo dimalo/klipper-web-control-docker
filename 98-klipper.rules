@@ -1,0 +1,4 @@
+## rule to restart klipper when the printer is connected via usb
+SUBSYSTEM=="tty", SUBSYSTEMS=="usb", ATTRS{idVendor}=="1d50", ATTRS{idProduct}=="614e", ACTION=="add", SYMLINK+="ttyKLIPPER"
+
+## RUN+="/bin/sh -c '/bin/echo RESTART > /tmp/printer'"

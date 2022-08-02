@@ -1,3 +1,5 @@
 printer.cfg
 !config/printer.cfg
 .config
+config/klipper-20*
+config/.moonraker.conf.bkp
