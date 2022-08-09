@@ -55,6 +55,7 @@ __Klipper with Moonraker shipped with Fluidd and/or Mainsail__
 
 ___Prerequisites:___
 - _Your klipper host machine runs Linux or MacOS (Windows was not tested yet)_
+    - (MacOS) Currently it is not possible to expose serial devices to a container in MacOS Docker. This is a known issue with Docker (https://github.com/docker/for-mac/issues/900)
 - _You have docker and docker-compose installed on your machine_
 - _You have flashed your printer with the appropriate .bin_
 - _You have your printer connected to your machine and you know it's serial mount point (e.g. /dev/ttyACM0 or /dev/ttyUSB0)_
