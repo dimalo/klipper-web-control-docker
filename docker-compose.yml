@@ -6,9 +6,12 @@ services:
     build:
       dockerfile: ./klipper/Dockerfile
       context: .
-      # args:
-      #   DEVICE_GROUP: device
-      #   DEVICE_GID: 987
+    # if klipper cannot connect to the printer check permissions on rpi then add the group here
+    # group_add:
+    #   - "996"
+    #   - "998"
+    cap_add:
+      - SYS_NICE
     container_name: klipper
     ports:
       - 7125:7125

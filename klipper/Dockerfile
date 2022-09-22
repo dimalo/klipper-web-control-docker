@@ -11,10 +11,26 @@ ARG MOONRAKER_VENV_DIR=${HOME}/moonraker-env
 
 RUN useradd -d ${HOME} -ms /bin/bash ${USER}
 RUN apt-get update && \
-    apt-get install -y locales git sudo wget curl gzip tar python2 virtualenv python-dev libffi-dev build-essential libncurses-dev libusb-dev gpiod python3-virtualenv python3-dev libopenjp2-7 python3-libgpiod liblmdb-dev libsodium-dev
+    apt-get install -y \
+	locales \
+	git \
+	sudo \
+	wget \
+	curl \
+	gzip \
+	tar \
+	libffi-dev \
+	build-essential \
+	libncurses-dev \
+	libusb-dev \
+	gpiod \
+	libopenjp2-7 \
+	liblmdb-dev \
+	libsodium-dev
 
 RUN sed -i -e 's/# en_GB.UTF-8 UTF-8/en_GB.UTF-8 UTF-8/' /etc/locale.gen
 RUN locale-gen
+RUN python -m pip install pip -U
 
 ENV LC_ALL en_GB.UTF-8 
 ENV LANG en_GB.UTF-8  
@@ -25,22 +41,25 @@ WORKDIR ${HOME}
 
 ### Klipper setup ###
 RUN git clone --single-branch --branch ${KLIPPER_BRANCH} https://github.com/Klipper3d/klipper.git klipper
-RUN [ ! -d ${KLIPPER_VENV_DIR} ] && virtualenv -p python2 ${KLIPPER_VENV_DIR}
-RUN ${KLIPPER_VENV_DIR}/bin/python -m pip install pip -U
+RUN [ ! -d ${KLIPPER_VENV_DIR} ] && python3 -m venv ${KLIPPER_VENV_DIR}
 RUN ${KLIPPER_VENV_DIR}/bin/pip install wheel numpy
-RUN ${KLIPPER_VENV_DIR}/bin/pip install -r klipper/scripts/klippy-requirements.txt
 
-COPY klipper/.config_linux /home/klippy/klipper/.config
+WORKDIR ${HOME}/klipper
+RUN ${KLIPPER_VENV_DIR}/bin/pip install -r scripts/klippy-requirements.txt
+RUN ${KLIPPER_VENV_DIR}/bin/python klippy/chelper/__init__.py
+RUN ${KLIPPER_VENV_DIR}/bin/python -m compileall klippy
 
-RUN cd ${HOME}/klipper && make
+COPY klipper/.config_linux_mcu ./.config
+RUN make
 
+WORKDIR ${HOME}
 # Install moonraker
 RUN git clone --single-branch --branch ${MOONRAKER_BRANCH} https://github.com/Arksine/moonraker.git moonraker
 RUN [ ! -d ${MOONRAKER_VENV_DIR} ] && python3 -m venv ${MOONRAKER_VENV_DIR}
-RUN ${MOONRAKER_VENV_DIR}/bin/python -m pip install pip -U
 RUN ${MOONRAKER_VENV_DIR}/bin/pip install wheel gpiod
 
-RUN ${MOONRAKER_VENV_DIR}/bin/pip install -r moonraker/scripts/moonraker-requirements.txt
+WORKDIR ${HOME}/moonraker
+RUN ${MOONRAKER_VENV_DIR}/bin/pip install -r scripts/moonraker-requirements.txt
 
 FROM python:3.10-slim-bullseye as image
 
@@ -49,7 +68,6 @@ ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
     apt-get install -y \
     curl \
-    gcc \
     git \
     gpiod \
     iproute2 \
@@ -61,10 +79,6 @@ RUN apt-get update && \
     libssl-dev \
     libtiff5 \
     locales \
-    python2 \
-    python3-libgpiod \
-    python3-numpy \
-    python3-matplotlib \
     rsync \
     supervisor \
     zlib1g-dev && \
@@ -95,7 +109,7 @@ RUN useradd --user-group --no-log-init --shell /bin/false -m -d ${HOME} ${USER} 
     usermod -a -G dialout ${USER} && \
     mkdir -p /var/log/supervisor && \
     mkdir -p /var/log/klipper && chown ${USER}:${USER} /var/log/klipper ${HOME} && \
-    pip install --no-cache supervisord-dependent-startup gpiod && \
+    pip install --no-cache supervisord-dependent-startup gpiod numpy matplotlib && \
     mkdir -p /usr/lib/python3 && \
     ln -s /usr/local/lib/python3.10/site-packages /usr/lib/python3/dist-packages
 
@@ -117,6 +131,7 @@ COPY --chown=${USER}:${USER} --from=builder ${KLIPPER_VENV_DIR} ${KLIPPER_VENV_D
 COPY --chown=${USER}:${USER} --from=builder ${HOME}/moonraker ${HOME}/moonraker
 COPY --chown=${USER}:${USER} --from=builder ${MOONRAKER_VENV_DIR} ${MOONRAKER_VENV_DIR}
 COPY --chown=${USER}:${USER} config ${CONFIG_DIR}
+COPY --chown=${USER}:${USER} klipper/run_in_venv /usr/local/bin/run_in_venv
 
 COPY klipper/supervisord.conf /etc/supervisord/conf.d/supervisord.conf
 COPY klipper/*.ini /etc/supervisord/
