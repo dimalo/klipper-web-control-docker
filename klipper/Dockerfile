@@ -45,6 +45,8 @@ WORKDIR ${HOME}
 
 ### Klipper setup ###
 RUN git clone --single-branch --branch ${KLIPPER_BRANCH} https://github.com/Klipper3d/klipper.git klipper
+RUN git clone --single-branch --branch master https://github.com/protoloft/klipper_z_calibration.git klipper_z_calibration
+RUN ln -sf klipper_z_calibration/z_calibration.py klipper/klippy/extras/z_calibration.py
 RUN [ ! -d ${KLIPPER_VENV_DIR} ] && python3 -m venv ${KLIPPER_VENV_DIR}
 
 WORKDIR ${HOME}/klipper
@@ -138,6 +140,7 @@ EXPOSE 7125
 USER root
 
 COPY --chown=${USER}:${USER} --from=builder ${HOME}/klipper/out/klipper.elf /usr/local/bin/klipper_mcu
+COPY --chown=${USER}:${USER} --from=builder ${HOME}/klipper_z_calibration ${HOME}/klipper_z_calibration
 COPY --chown=${USER}:${USER} --from=builder ${HOME}/klipper ${HOME}/klipper
 COPY --chown=${USER}:${USER} --from=builder ${KLIPPER_VENV_DIR} ${KLIPPER_VENV_DIR}
 COPY --chown=${USER}:${USER} --from=builder ${HOME}/moonraker ${HOME}/moonraker
