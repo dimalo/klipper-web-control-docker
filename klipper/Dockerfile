@@ -75,7 +75,9 @@ ENV LANGUAGE en_GB:en
 
 ARG USER=klippy
 ARG HOME=/home/${USER}
-ENV CONFIG_DIR=${HOME}/.config
+ARG PRINTER_DATA=${HOME}/printer_data
+ENV CONFIG_DIR=${PRINTER_DATA}/config
+ENV GCODE_DIR=${PRINTER_DATA}/gcodes
 ENV KLIPPER_VENV_DIR=${HOME}/klippy-env
 ENV MOONRAKER_VENV_DIR=${HOME}/moonraker-env
 
@@ -96,9 +98,10 @@ RUN useradd --user-group --no-log-init --shell /bin/false -m -d ${HOME} ${USER} 
 USER ${USER}
 WORKDIR ${HOME}
 
-RUN mkdir -p ${HOME}/gcode_files ${CONFIG_DIR} ${HOME}/.moonraker ${HOME}/.moonraker_database ${HOME}/.klipper_repo_backup ${HOME}/.moonraker_repo_backup
+# According to https://moonraker.readthedocs.io/en/latest/installation/#data-folder-structure
+RUN mkdir -p ${PRINTER_DATA} ${CONFIG_DIR} ${GCODE_DIR} ${PRINTER_DATA}/backup ${PRINTER_DATA}/certs ${PRINTER_DATA}/database ${PRINTER_DATA}/logs ${PRINTER_DATA}/systemd
 
-VOLUME ${HOME}/gcode_files
+VOLUME ${GCODE_DIR}
 VOLUME ${CONFIG_DIR}
 
 EXPOSE 7125
