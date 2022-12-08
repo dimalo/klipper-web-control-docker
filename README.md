@@ -2,6 +2,11 @@
 ![Klipper Moonraker Multiarch Image CI](https://github.com/dimalo/klipper-web-control-docker/workflows/Klipper%20Moonraker%20Multiarch%20Image%20CI/badge.svg)
 
 # klipper-web-control-docker
+
+## Caution
+If you used klipper-web-control-docker before, mind the changes in `docker-compose.yml` in accordance with the changed [moonraker standard](https://moonraker.readthedocs.io/en/latest/installation/#data-folder-structure).
+Volume bindings were changed from `gcode_files:/home/klippy/gcode_files` to `gcodes:/home/klippy/printer_data/gcodes` and from `./config:/home/klippy/.config` to `./config:/home/klippy/printer_data/config`. `moonraker_data:/home/klippy/.moonraker` was removed.
+
 __Klipper with Moonraker shipped with Fluidd and/or Mainsail__
 
 - get your printer to the next level!
