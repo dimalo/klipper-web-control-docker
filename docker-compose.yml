@@ -14,13 +14,13 @@ services:
       - 7125:7125
     restart: unless-stopped
     volumes:
-      - gcode_files:/home/klippy/gcode_files
+      - gcodes:/home/klippy/printer_data/gcodes
+      # mind folder permissions
       # be aware to create your own branch if you mount the config folder as it will be updated on the main branch
       # that way you can merge upstream changes to your customized configs
-      - ./config:/home/klippy/.config
-      - moonraker_data:/home/klippy/.moonraker
-      # - <<your_config_path>>:/home/klippy/.config
-      # - ./printer.cfg:/home/klippy/.config/printer.cfg
+      - ./config:/home/klippy/printer_data/config
+      # - <<your_config_path>>:/home/klippy/printer_data/config
+      # - ./printer.cfg:/home/klippy/printer_data/config/printer.cfg
     # mount serial device - take care to grant sufficient permissions to the device: <host_dev>:<container_dev>
     # put <container_dev> into your printer.cfg
     devices:
@@ -48,9 +48,9 @@ services:
   #     - gcode_files:/home/klippy/gcode_files
   #     # be aware to create your own branch if you mount the config folder as it will be updated on the main branch
   #     # that way you can merge upstream changes to your (developed) configs...
-  #     - ./config_another_printer:/home/klippy/.config
-  #     # - <<your_config_path>>:/home/klippy/.config
-  #     # - ./another_printer.cfg:/home/klippy/.config/printer.cfg
+  #     - ./config_another_printer:/home/klippy/printer_data/config
+  #     # - <<your_config_path>>:/home/klippy/printer_data/config
+  #     # - ./another_printer.cfg:/home/klippy/printer_data/config/printer.cfg
   #   # mount serial device - take care to grant sufficient permissions to the device: <host_dev>:<container_dev>
   #   # put <container_dev> into your printer.cfg
   #   devices:
@@ -91,6 +91,4 @@ services:
       # - klipper_another_printer:klipper_another_printer
 
 volumes: 
-  gcode_files:
-  moonraker_data:
-
+  gcodes:
