@@ -1,6 +1,14 @@
 ![Mainsail Multiarch Image CI](https://github.com/dimalo/klipper-web-control-docker/workflows/Mainsail%20Multiarch%20Image%20CI/badge.svg)
 ![Klipper Moonraker Multiarch Image CI](https://github.com/dimalo/klipper-web-control-docker/workflows/Klipper%20Moonraker%20Multiarch%20Image%20CI/badge.svg)
 
+- [klipper-web-control-docker](#klipper-web-control-docker)
+  - [Features](#features)
+  - [Getting started](#getting-started)
+    - [Install the services](#install-the-services)
+    - [If things are running fine now...](#if-things-are-running-fine-now)
+    - [If things are not running...](#if-things-are-not-running)
+  - [Features not implemented or not tested (yet)](#features-not-implemented-or-not-tested-yet)
+  - [Credits](#credits)
 # klipper-web-control-docker
 __Klipper with Moonraker shipped with Fluidd and/or Mainsail__
 
@@ -14,6 +22,7 @@ __Klipper with Moonraker shipped with Fluidd and/or Mainsail__
 - Docker multistage builds for optimized image sizes
 - fully integrated klipper image with moonraker enabled
   - startup management with supervisord & dependent startup (klipper starts first, then only if klipper is running moonraker is started)
+- Optionally use the klipper_z_calibration-extension
 - collection of useful klipper macros [see client_macros.cfg](./config/client_macros.cfg)
   - Nozzle prime line with random Y starting point
     
@@ -47,7 +56,7 @@ __Klipper with Moonraker shipped with Fluidd and/or Mainsail__
   - supports [Fluidd](https://github.com/cadriel/fluidd)
   - supports [Mainsail](https://github.com/meteyou/mainsail)
   - you can even run both in parallel!
-- only your printer.cfg is required!
+- only your printer.cfg is required
   - the services start without it, so you can supply your config through the web UI
   - you can mount your config file to /home/klippy/.config/printer.cfg, and klipper will pick it up after a restart
 
@@ -99,6 +108,19 @@ Run ```docker-compose build```
 
 After build run ```docker-compose up -d``` and see if it works.
 
+__Klipper is crashing:__
+
+(from [#25](https://github.com/dimalo/klipper-web-control-docker/issues/25))
+
+_Klipper crashes with log similar to:_
+```log
+klipper Fatal Python error: pyinit_main: can't initialize time
+klipper | Python runtime state: core initialized
+klipper | PermissionError: [Errno 1] Operation not permitted
+```
+
+
+check your libseccomp version and update if needed (see [https://docs.linuxserver.io/faq#libseccomp](https://docs.linuxserver.io/faq#libseccomp))
 ## Features not implemented or not tested (yet)
 - compiling klipper.bin for your printer (will need compile tools which bloat the image so this will likely not be implemented)
 - automatic updates for klipper/moonraker (partly working as repos are getting updated but no dependency installs happen - update the container with ```docker-compose pull``` instead)
@@ -112,4 +134,5 @@ After build run ```docker-compose up -d``` and see if it works.
 - [Moonraker](https://github.com/Arksine/moonraker)
 - [Fluidd](https://github.com/cadriel/fluidd)
 - [Mainsail](https://github.com/meteyou/mainsail)
+- [klipper_z_calibration](https://github.com/protoloft/klipper_z_calibration)
 - awesome global RepRap open source community!
