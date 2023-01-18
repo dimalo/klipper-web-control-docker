@@ -1,4 +1,4 @@
-FROM python:3.11-bullseye as builder
+FROM python:3.10-bullseye as builder
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG KLIPPER_BRANCH="master"
@@ -68,7 +68,7 @@ RUN ${MOONRAKER_VENV_DIR}/bin/pip install wheel gpiod && \
     ${MOONRAKER_VENV_DIR}/bin/pip install --no-cache-dir -f ${WHEELS} -r scripts/moonraker-requirements.txt
 RUN ${MOONRAKER_VENV_DIR}/bin/python -m compileall moonraker
 
-FROM python:3.11-slim-bullseye as image
+FROM python:3.10-slim-bullseye as image
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -102,7 +102,8 @@ ENV LANGUAGE en_GB:en
 
 ARG USER=klippy
 ARG HOME=/home/${USER}
-ENV CONFIG_DIR=${HOME}/.config
+ENV DATA_DIR=${HOME}/printer_data
+ENV CONFIG_DIR=${DATA_DIR}/config
 ENV KLIPPER_VENV_DIR=${HOME}/klippy-env
 ENV MOONRAKER_VENV_DIR=${HOME}/moonraker-env
 
@@ -131,10 +132,9 @@ RUN pip install --no-index -f ${WHEELS} supervisord-dependent-startup gpiod nump
 USER ${USER}
 WORKDIR ${HOME}
 
-RUN mkdir -p ${HOME}/gcode_files ${CONFIG_DIR} ${HOME}/.moonraker ${HOME}/.moonraker_database ${HOME}/.klipper_repo_backup ${HOME}/.moonraker_repo_backup
+RUN mkdir -p ${HOME}/gcodes ${CONFIG_DIR} ${HOME}/.moonraker ${HOME}/.klipper_repo_backup ${HOME}/.moonraker_repo_backup
 
-VOLUME ${HOME}/gcode_files
-VOLUME ${CONFIG_DIR}
+VOLUME ${DATA_DIR}
 
 EXPOSE 7125
 
@@ -149,6 +149,6 @@ COPY --chown=${USER}:${USER} --from=builder ${MOONRAKER_VENV_DIR} ${MOONRAKER_VE
 COPY --chown=${USER}:${USER} config ${CONFIG_DIR}
 COPY --chown=${USER}:${USER} klipper/run_in_venv /usr/local/bin/run_in_venv
 
-COPY klipper/supervisord.conf /etc/supervisord/conf.d/supervisord.conf
-COPY klipper/*.ini /etc/supervisord/
-CMD ["supervisord", "-c", "/etc/supervisord/conf.d/supervisord.conf"]
+COPY klipper/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY klipper/*.ini /etc/supervisor/
+CMD ["supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
