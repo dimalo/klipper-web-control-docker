@@ -149,6 +149,6 @@ COPY --chown=${USER}:${USER} --from=builder ${MOONRAKER_VENV_DIR} ${MOONRAKER_VE
 COPY --chown=${USER}:${USER} config ${CONFIG_DIR}
 COPY --chown=${USER}:${USER} klipper/run_in_venv /usr/local/bin/run_in_venv
 
-COPY klipper/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-COPY klipper/*.ini /etc/supervisor/
-CMD ["supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+COPY klipper/supervisord.conf /etc/supervisor/supervisord.conf
+COPY klipper/*.ini /etc/supervisor/conf.d/
+CMD ["supervisord", "-c", "/etc/supervisor/supervisord.conf"]
