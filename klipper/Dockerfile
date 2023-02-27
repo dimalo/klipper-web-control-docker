@@ -119,8 +119,11 @@ RUN useradd --user-group --no-log-init --shell /bin/false -m -d ${HOME} ${USER} 
     usermod -a -G ${DEVICE_GROUP} ${USER} && \
     usermod -a -G tty ${USER} && \
     usermod -a -G dialout ${USER} && \
-    mkdir -p /var/log/supervisor ${HOME}/.cache/pip && chown -R root:${USER} /var/log/supervisor && \
-    mkdir -p /var/log/klipper && chown -R ${USER}:${USER} /var/log/klipper ${HOME}
+    mkdir -p /var/log/supervisor ${HOME}/.cache/pip && \
+    touch /var/log/supervisor/supervisord.log && \
+    chown -R root:${USER} /var/log/supervisor && \
+    mkdir -p /var/log/klipper && \
+    chown -R ${USER}:${USER} /var/log/klipper ${HOME}
 
 COPY --chown=${USER}:${USER} --from=builder ${WHEELS} ${WHEELS}
 
