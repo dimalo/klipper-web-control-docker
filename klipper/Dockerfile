@@ -122,6 +122,7 @@ RUN useradd --user-group --no-log-init --shell /bin/false -m -d ${HOME} ${USER} 
     mkdir -p /var/log/supervisor ${HOME}/.cache/pip && \
     touch /var/log/supervisor/supervisord.log && \
     chown -R root:${USER} /var/log/supervisor && \
+    chmod g=u /var/log/supervisor && \
     mkdir -p /var/log/klipper && \
     chown -R ${USER}:${USER} /var/log/klipper ${HOME}
 
