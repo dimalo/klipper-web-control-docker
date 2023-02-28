@@ -1,4 +1,4 @@
-FROM python:3.10-bullseye as builder
+FROM python:3.11-bullseye as builder
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG KLIPPER_BRANCH="master"
@@ -68,7 +68,7 @@ RUN ${MOONRAKER_VENV_DIR}/bin/pip install wheel gpiod && \
     ${MOONRAKER_VENV_DIR}/bin/pip install --no-cache-dir -f ${WHEELS} -r scripts/moonraker-requirements.txt
 RUN ${MOONRAKER_VENV_DIR}/bin/python -m compileall moonraker
 
-FROM python:3.10-slim-bullseye as image
+FROM python:3.11-slim-bullseye as image
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -130,7 +130,7 @@ COPY --chown=${USER}:${USER} --from=builder ${WHEELS} ${WHEELS}
 
 RUN pip install --no-index -f ${WHEELS} supervisord-dependent-startup gpiod numpy matplotlib && \
     mkdir -p /usr/lib/python3 && \
-    ln -s /usr/local/lib/python3.10/site-packages /usr/lib/python3/dist-packages && \
+    ln -s /usr/local/lib/python3.11/site-packages /usr/lib/python3/dist-packages && \
     rm -Rf ${WHEELS}
 
 USER ${USER}
