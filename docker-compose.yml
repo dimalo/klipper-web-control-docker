@@ -10,7 +10,6 @@ services:
     # group_add:
     #   - "996"
     #   - "998"
-    privileged: true
     cap_add:
       - SYS_NICE
     container_name: klipper
@@ -23,14 +22,13 @@ services:
       # that way you can merge upstream changes to your customized configs
       - ./config:/home/klippy/printer_data/config
       - moonraker_data:/home/klippy/.moonraker_database
-      - /dev:/dev
       # - <<your_config_path>>:/home/klippy/.config
       # - ./printer.cfg:/home/klippy/.config/printer.cfg
     # mount serial device - take care to grant sufficient permissions to the device: <host_dev>:<container_dev>
     # put <container_dev> into your printer.cfg
       
-    # devices:
-    #   - /dev/ttyUSB0:/dev/ttyUSB0
+    devices:
+      - /dev/ttyUSB0:/dev/ttyUSB0
 
   ##################################################################
   # Example config for a second printer on a different serial port
