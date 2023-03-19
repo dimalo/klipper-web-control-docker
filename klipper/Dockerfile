@@ -15,21 +15,27 @@ ENV PYTHONUNBUFFERED=1
 RUN useradd -d ${HOME} -ms /bin/bash ${USER}
 RUN apt-get update && \
     apt-get install -y \
-	locales \
-	git \
-	sudo \
-	wget \
-	curl \
-	gzip \
-	tar \
-	libffi-dev \
-	build-essential \
-	libncurses-dev \
-	libusb-dev \
-	gpiod \
-	libopenjp2-7 \
-	liblmdb-dev \
-	libsodium-dev
+    locales \
+    git \
+    sudo \
+    wget \
+    curl \
+    gzip \
+    tar \
+    libffi-dev \
+    build-essential \
+    libncurses-dev \
+    libusb-dev \
+    gpiod \
+    libopenjp2-7 \
+    liblmdb-dev \
+    libsodium-dev \
+    imagemagick \
+    libv4l-dev \
+    libjpeg-dev \
+    libjpeg62-turbo-dev \
+    cmake \
+    unzip
 
 RUN sed -i -e 's/# en_GB.UTF-8 UTF-8/en_GB.UTF-8 UTF-8/' /etc/locale.gen
 RUN locale-gen
@@ -68,12 +74,19 @@ RUN ${MOONRAKER_VENV_DIR}/bin/pip install wheel gpiod && \
     ${MOONRAKER_VENV_DIR}/bin/pip install --no-cache-dir -f ${WHEELS} -r scripts/moonraker-requirements.txt
 RUN ${MOONRAKER_VENV_DIR}/bin/python -m compileall moonraker
 
+
+#webcam
+WORKDIR ${HOME}
+RUN git clone https://github.com/jacksonliam/mjpg-streamer.git
+RUN cd mjpg-streamer/mjpg-streamer-experimental && make
+RUN mv mjpg-streamer/mjpg-streamer-experimental/* mjpg-streamer && rm -rf mjpg-streamer/mjpg-streamer-experimental
+
 FROM python:3.10-slim-bullseye as image
 
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \
-    apt-get install -y \
+    apt-get install -y \    
     curl \
     git \
     gpiod \
@@ -88,7 +101,8 @@ RUN apt-get update && \
     locales \
     rsync \
     supervisor \
-    zlib1g-dev && \
+    libv4l-dev \
+    zlib1g-dev && \    
     sed -i -e 's/# en_GB.UTF-8 UTF-8/en_GB.UTF-8 UTF-8/' /etc/locale.gen && \
     locale-gen && \
     # Clean up
@@ -102,7 +116,7 @@ ENV LANGUAGE en_GB:en
 
 ARG USER=klippy
 ARG HOME=/home/${USER}
-ENV CONFIG_DIR=${HOME}/.config
+ENV CONFIG_DIR=${HOME}/printer_data/config
 ENV KLIPPER_VENV_DIR=${HOME}/klippy-env
 ENV MOONRAKER_VENV_DIR=${HOME}/moonraker-env
 
@@ -118,6 +132,7 @@ RUN useradd --user-group --no-log-init --shell /bin/false -m -d ${HOME} ${USER} 
     usermod -a -G ${DEVICE_GROUP} ${USER} && \
     usermod -a -G tty ${USER} && \
     usermod -a -G dialout ${USER} && \
+    usermod -a -G video ${USER} && \
     mkdir -p /var/log/supervisor ${HOME}/.cache/pip && \
     mkdir -p /var/log/klipper && chown -R ${USER}:${USER} /var/log/klipper ${HOME}
 
@@ -131,10 +146,12 @@ RUN pip install --no-index -f ${WHEELS} supervisord-dependent-startup gpiod nump
 USER ${USER}
 WORKDIR ${HOME}
 
-RUN mkdir -p ${HOME}/gcode_files ${CONFIG_DIR} ${HOME}/.moonraker ${HOME}/.moonraker_database ${HOME}/.klipper_repo_backup ${HOME}/.moonraker_repo_backup
+RUN mkdir -p ${HOME}/printer_data/gcodes ${CONFIG_DIR} ${HOME}/.moonraker_database 
 
-VOLUME ${HOME}/gcode_files
+VOLUME ${HOME}/printer_data/gcodes
+VOLUME  ${HOME}/.moonraker_database 
 VOLUME ${CONFIG_DIR}
+
 
 EXPOSE 7125
 
@@ -151,4 +168,11 @@ COPY --chown=${USER}:${USER} klipper/run_in_venv /usr/local/bin/run_in_venv
 
 COPY klipper/supervisord.conf /etc/supervisord/conf.d/supervisord.conf
 COPY klipper/*.ini /etc/supervisord/
+
+COPY --chown=${USER}:${USER} --chmod=700 mjpgstreamer/index.html ${HOME}/www-mjpgstreamer/index.html
+COPY --chown=${USER}:${USER} --from=builder ${HOME}/mjpg-streamer ${HOME}/mjpg-streamer
+
+
+EXPOSE 8080
+
 CMD ["supervisord", "-c", "/etc/supervisord/conf.d/supervisord.conf"]
