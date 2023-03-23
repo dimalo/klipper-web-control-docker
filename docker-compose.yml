@@ -14,7 +14,13 @@ services:
     ports:
       - 7125:7125
     restart: unless-stopped
-    volumes:
+    volumes: 
+      #- /bin/systemctl:/bin/systemctl # these are so I can restart the host
+      #- /run/dbus:/run/dbus
+      #- /run/systemd/system:/run/systemd/system
+      #- /lib/systemd:/lib/systemd
+      #- /var/run/dbus/system_bus_socket:/var/run/dbus/system_bus_socket
+      #- /sys/fs/cgroup:/sys/fs/cgroup
       - gcode_files:/home/klippy/gcode_files
       # be aware to create your own branch if you mount the config folder as it will be updated on the main branch
       # that way you can merge upstream changes to your customized configs
@@ -52,6 +58,7 @@ services:
       args:
         FRONTEND_ZIP_URL: https://github.com/meteyou/mainsail/releases/latest/download/mainsail.zip
     container_name: mainsail
+    restart: unless-stopped
     ports:
       - 8011:80
     depends_on: 
