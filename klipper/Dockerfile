@@ -170,7 +170,7 @@ COPY --chown=${USER}:${USER} klipper/run_in_venv /usr/local/bin/run_in_venv
 COPY klipper/supervisord.conf /etc/supervisor/supervisord.conf
 COPY klipper/*.ini /etc/supervisor/conf.d/
 
-COPY --chown=${USER}:${USER} --chmod=700 mjpgstreamer/index.html ${HOME}/www-mjpgstreamer/index.html
+COPY --chown=${USER}:${USER} --chmod=700 klipper/mjpgstreamer/index.html ${HOME}/www-mjpgstreamer/index.html
 COPY --chown=${USER}:${USER} --from=builder ${HOME}/mjpg-streamer ${HOME}/mjpg-streamer
 
 
