@@ -12,8 +12,8 @@ FROM nginx:alpine as image
 
 ENV KLIPPER_HOST klipper
 ENV KLIPPER_API_PORT 7125
-ENV JPEG_STREAM_HOST localhost
-ENV JPEG_STREAM_PORT 8888
+ENV JPEG_STREAM_HOST klipper
+ENV JPEG_STREAM_PORT 8080
 
 ADD --chown=101:101 common_vars.conf /etc/nginx/conf.d/common_vars.conf 
 COPY --chown=101:101 upstreams.conf.template /etc/nginx/templates/upstreams.conf.template
