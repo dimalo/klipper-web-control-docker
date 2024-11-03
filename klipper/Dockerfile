@@ -176,4 +176,4 @@ COPY --chown=${USER}:${USER} --from=builder ${HOME}/mjpg-streamer ${HOME}/mjpg-s
 
 EXPOSE 8080
 
-CMD ["supervisord", "-c", "/etc/supervisor/supervisord.conf
+CMD ["supervisord", "-c", "/etc/supervisor/supervisord.conf"]
