@@ -5,6 +5,31 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.1] - Unreleased
+
+Proposed patch after 2.0.0: correct Docker update UX. **Do not cut a git tag
+until the maintainer confirms** the version number (2.0.1 vs 2.1.0).
+
+### Fixed
+
+- Disable Moonraker **Update Manager** in stock and CI `moonraker.conf` so
+  Fluidd/Mainsail no longer offer in-container git updates for Klipper,
+  Moonraker, or `klipper_z_calibration` (those fight image pins in
+  `upstream.lock`).
+
+### Added
+
+- [docs/updates.md](./docs/updates.md) — how to update this stack
+  (`docker compose pull` / rebuild; bump pins via PR + CI smoke).
+
+### Version rationale
+
+- Prefer **2.0.1** (patch): behavior/docs fix for an already-documented
+  non-feature (“automatic updates” were never supported); no mount or API
+  layout break.
+- Prefer **2.1.0** only if you want to treat “Update Manager removed from
+  stock conf” as a user-visible capability change rather than a bugfix.
+
 ## [2.0.0] - 2026-10-27
 
 Major revive of the Docker stack on `main`: Moonraker **`printer_data`** layout,
