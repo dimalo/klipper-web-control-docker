@@ -18,7 +18,14 @@ __Klipper with Moonraker shipped with Fluidd and/or Mainsail__
 - Build with Github actions and deployed to https://hub.docker.com/u/dimalo
 - Docker multiarch builds with best practices
 
-> **Note:** `main` / Docker Hub `dimalo/klipper-moonraker:latest` may lag `develop`. Prefer `develop` for path layout (`printer_data`). Use the [CI smoke harness](#ci-smoke-no-mcu) to verify builds without a printer.
+> **Status:** Docker Hub [`dimalo/klipper-moonraker:latest`](https://hub.docker.com/r/dimalo/klipper-moonraker) is **stale (~2023)** — same lineage as GitHub `main` (~2022). Frontend Hub tags can look newer; that does **not** mean the core image is current.
+>
+> Until milestone **M1** merges smoke-tested `develop` → `main` and republishes Hub `latest`, prefer:
+> - the **`develop`** branch (includes the `printer_data` layout),
+> - Hub tag **`dimalo/klipper-moonraker:next`** (built from `develop`), or
+> - **building from source** with the Dockerfiles / Compose files in this repo.
+>
+> No-MCU verification: [docs/ci-smoke.md](./docs/ci-smoke.md) · [`.github/workflows/ci-smoke.yml`](./.github/workflows/ci-smoke.yml) · [README section](#ci-smoke-no-mcu).
 
 ## Features
 - Dockerhub images support x64, ARM64, ARM32v7 & ARM32v6
