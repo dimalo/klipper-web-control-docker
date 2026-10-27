@@ -33,7 +33,11 @@ jobs:
         run: docker build -f frontend/Dockerfile -t kwc-fluidd:ci ./frontend
 
       - name: Compose up (CI)
-        run: docker compose -f docker-compose.ci.yml up -d
+        run: |
+          # Moonraker may write backups under printer_data/config; ensure the
+          # bind mount is writable by the container user (klippy).
+          chmod -R a+rwX config/ci
+          docker compose -f docker-compose.ci.yml up -d
 
       - name: Smoke asserts
         run: bash scripts/ci-smoke.sh

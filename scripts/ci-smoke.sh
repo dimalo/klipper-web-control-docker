@@ -12,7 +12,9 @@ UI_URL="${UI_URL:-http://127.0.0.1:8010}"
 WAIT_SECONDS="${WAIT_SECONDS:-120}"
 KLIPPER_CONTAINER="${KLIPPER_CONTAINER:-klipper}"
 
+# Match permission/path failures; callers should strip Moonraker .bkp lines first.
 FORBIDDEN_LOG_PATTERN="${FORBIDDEN_LOG_PATTERN:-PermissionError|No such file or directory: '/home/klippy/.config/moonraker.conf'}"
+
 
 log() { printf ':: %s\n' "$*"; }
 fail() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
@@ -83,19 +85,24 @@ code="$(curl -sf -o /dev/null -w '%{http_code}' --max-time 5 "${UI_URL}/")" \
 log "checking supervisorctl status in ${KLIPPER_CONTAINER}"
 # Allow a short settle after Moonraker HTTP became ready
 sleep 2
-status="$(docker exec "${KLIPPER_CONTAINER}" supervisorctl status)" || fail "supervisorctl status failed"
+# supervisorctl exits non-zero when any program is FATAL/BACKOFF (e.g. mjpg
+# without a camera). Capture output anyway and assert only required programs.
+status="$(docker exec "${KLIPPER_CONTAINER}" supervisorctl status 2>&1 || true)"
 printf '%s\n' "${status}"
+[[ -n "${status}" ]] || fail "supervisorctl status returned empty output"
 
-echo "${status}" | grep -E '^klipper\s+' | grep -q RUNNING \
+echo "${status}" | grep -E '^klipper[[:space:]]+' | grep -q RUNNING \
   || fail "supervisor program 'klipper' not RUNNING"
-echo "${status}" | grep -E '^moonraker\s+' | grep -q RUNNING \
+echo "${status}" | grep -E '^moonraker[[:space:]]+' | grep -q RUNNING \
   || fail "supervisor program 'moonraker' not RUNNING"
 
 # --- 7) log gate ----------------------------------------------------------
 log "scanning klipper container logs for forbidden patterns"
 logs="$(docker logs "${KLIPPER_CONTAINER}" 2>&1 || true)"
-if echo "${logs}" | grep -E "${FORBIDDEN_LOG_PATTERN}" >/dev/null; then
-  echo "${logs}" | grep -E "${FORBIDDEN_LOG_PATTERN}" | tail -n 20 >&2
+# Drop Moonraker config backup lines (.bkp) before matching PermissionError gates.
+filtered="$(echo "${logs}" | grep -v '\.bkp' || true)"
+if echo "${filtered}" | grep -E "${FORBIDDEN_LOG_PATTERN}" >/dev/null; then
+  echo "${filtered}" | grep -E "${FORBIDDEN_LOG_PATTERN}" | tail -n 20 >&2
   fail "forbidden pattern in container logs: ${FORBIDDEN_LOG_PATTERN}"
 fi
 

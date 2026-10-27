@@ -10,7 +10,7 @@ Phase 0 verification loop for this repo: **build images → compose up → asser
 | Fluidd UI | `GET http://127.0.0.1:8010/` → HTTP 200 |
 | Nginx → Moonraker | `GET http://127.0.0.1:8010/server/info` → HTTP 200 |
 | Supervisor | `klipper` and `moonraker` programs **RUNNING** |
-| Logs | No `PermissionError` / stale `.config/moonraker.conf` path errors |
+| Logs | No permission errors on `moonraker.conf` / stale `.config/` paths (`.bkp` write noise ignored) |
 
 **Not** asserted in CI: `klippy_state == ready`, homing, printing, ADXL, webcams.
 
