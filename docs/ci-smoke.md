@@ -1,18 +1,42 @@
 # CI smoke harness (no MCU)
 
-Phase 0 verification loop for this repo: **build images → compose up → assert HTTP + supervisor**, without a printer.
+Verification loop for this repo: **build images → compose up → assert HTTP, supervisor, file/management APIs, and restarts**, without a printer.
 
 ## What “green” means
 
 | Check | Pass criteria |
 | --- | --- |
-| Moonraker | `GET http://127.0.0.1:7125/server/info` → HTTP 200 + JSON |
-| Fluidd UI | `GET http://127.0.0.1:8010/` → HTTP 200 |
-| Nginx → Moonraker | `GET http://127.0.0.1:8010/server/info` → HTTP 200 |
+| Moonraker | `GET /server/info` → HTTP 200 + JSON |
+| Fluidd UI | `GET /` → HTTP 200 |
+| Nginx → Moonraker | `GET /server/info` via UI port → HTTP 200 |
 | Supervisor | `klipper` and `moonraker` programs **RUNNING** |
 | Logs | No permission errors on `moonraker.conf` / stale `.config/` paths (`.bkp` write noise ignored) |
+| File manager | `GET /server/files/list?root=config` → HTTP 200 + JSON |
+| Machine info | `GET /machine/system_info` → HTTP 200 + JSON |
+| Restart Klipper | `POST /machine/services/restart` `{"service":"klipper"}` → accepted; then `/server/info` 200 and supervisor RUNNING again |
+| Restart Moonraker | `POST /server/restart` → process recovers; `/server/info` 200 and supervisor RUNNING again |
+| Proxied restart | Same Klipper restart through Fluidd Nginx (`UI/machine/services/restart`) |
 
-**Not** asserted in CI: `klippy_state == ready`, homing, printing, ADXL, webcams.
+**Out of scope (no MCU / not asserted):**
+
+- `klippy_state == ready`
+- Homing, printing, extrusion, bed mesh
+- ADXL345 / SPI / GPIO
+- Webcam / mjpg-streamer healthy
+- Host reboot/shutdown (`/machine/reboot`, `/machine/shutdown`)
+- Firmware flash / update_manager installs
+
+## CI Moonraker machine provider
+
+`config/ci/moonraker.conf` sets:
+
+```ini
+[machine]
+provider: supervisord_cli
+supervisord_config_path: /etc/supervisor/supervisord.conf
+```
+
+`provider: none` disables `/machine/services/*` (Fluidd “Restart Klipper”), so CI uses `supervisord_cli` like the shipped compose stack.
 
 ## Why a standalone compose file?
 
@@ -31,8 +55,6 @@ docker compose -f docker-compose.ci.yml up -d
 bash scripts/ci-smoke.sh
 docker compose -f docker-compose.ci.yml down -v
 ```
-
-CI configs live under `config/ci/` (dummy MCU serial path, `provider: none` for Moonraker).
 
 ## GitHub Actions
 
