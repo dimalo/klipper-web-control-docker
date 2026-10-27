@@ -1,0 +1,60 @@
+# Standalone CI / no-printer-hardware smoke stack.
+# Does NOT merge with docker-compose.yml so host `devices:` are never inherited.
+#
+# Uses the in-container Linux host MCU (klipper_mcu → /tmp/klipper_host_mcu)
+# so Klippy can reach a real connected state without USB serial hardware.
+#
+# Fluidd uses `network_mode: service:klipper` so Nginx proxies to Moonraker on
+# 127.0.0.1 (avoids brittle Docker bridge ICC; still validates the proxy path).
+# UI is published on the klipper service as port 8010→80.
+#
+# Usage:
+#   DOCKER_BUILDKIT=1 docker build -f klipper/Dockerfile -t kwc-klipper:ci .
+#   DOCKER_BUILDKIT=1 docker build -f frontend/Dockerfile -t kwc-fluidd:ci ./frontend
+#   docker compose -f docker-compose.ci.yml up -d
+#   bash scripts/ci-smoke.sh
+
+services:
+  klipper:
+    image: kwc-klipper:ci
+    pull_policy: never
+    container_name: klipper
+    restart: "no"
+    cap_add:
+      - SYS_NICE
+    ports:
+      - "7125:7125"
+      # Fluidd shares this network namespace; publish its HTTP port here.
+      - "8010:80"
+    volumes:
+      # rw: Moonraker may write config backups under printer_data/config
+      - ./config/ci:/home/klippy/printer_data/config
+      - gcode_files:/home/klippy/printer_data/gcodes
+      - moonraker_data:/home/klippy/printer_data/database
+      # CI supervisor overrides: host MCU without -r; klipper waits for it
+      - ./ci/supervisor/klipper_mcu.ini:/etc/supervisor/conf.d/klipper_mcu.ini:ro
+      - ./ci/supervisor/klipper.ini:/etc/supervisor/conf.d/klipper.ini:ro
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://127.0.0.1:7125/server/info"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 40s
+
+  fluidd:
+    image: kwc-fluidd:ci
+    pull_policy: never
+    container_name: fluidd
+    restart: "no"
+    network_mode: "service:klipper"
+    environment:
+      KLIPPER_HOST: "127.0.0.1"
+      KLIPPER_API_PORT: "7125"
+      JPEG_STREAM_HOST: "127.0.0.1"
+      JPEG_STREAM_PORT: "8080"
+    depends_on:
+      - klipper
+
+volumes:
+  gcode_files:
+  moonraker_data:

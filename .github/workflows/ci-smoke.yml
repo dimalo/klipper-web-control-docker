@@ -1,0 +1,54 @@
+name: CI smoke (host MCU)
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+      - "cursor/**"
+  pull_request:
+    branches:
+      - develop
+      - main
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build klipper-moonraker image
+        env:
+          DOCKER_BUILDKIT: "1"
+        run: docker build -f klipper/Dockerfile -t kwc-klipper:ci .
+
+      - name: Build fluidd image
+        env:
+          DOCKER_BUILDKIT: "1"
+        run: docker build -f frontend/Dockerfile -t kwc-fluidd:ci ./frontend
+
+      - name: Compose up (CI)
+        run: |
+          # Moonraker may write backups under printer_data/config; ensure the
+          # bind mount is writable by the container user (klippy).
+          chmod -R a+rwX config/ci
+          docker compose -f docker-compose.ci.yml up -d
+
+      - name: Smoke asserts
+        run: bash scripts/ci-smoke.sh
+
+      - name: Dump logs on failure
+        if: failure()
+        run: |
+          docker compose -f docker-compose.ci.yml ps || true
+          docker compose -f docker-compose.ci.yml logs --no-color | tail -n 400 || true
+          docker logs klipper 2>&1 | tail -n 200 || true
+
+      - name: Tear down
+        if: always()
+        run: docker compose -f docker-compose.ci.yml down -v || true

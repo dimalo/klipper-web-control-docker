@@ -1,4 +1,4 @@
-FROM python:3.10-bullseye
+FROM python:3.11
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG KLIPPER_BRANCH="master"
@@ -28,7 +28,7 @@ RUN apt-get update && \
 
 RUN sed -i -e 's/# en_GB.UTF-8 UTF-8/en_GB.UTF-8 UTF-8/' /etc/locale.gen
 RUN locale-gen
-RUN python -m pip install pip -U
+RUN python -m pip install -U pip wheel
 
 ENV LC_ALL en_GB.UTF-8 
 ENV LANG en_GB.UTF-8  

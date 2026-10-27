@@ -7,6 +7,8 @@
     - [Install the services](#install-the-services)
     - [If things are running fine now...](#if-things-are-running-fine-now)
     - [If things are not running...](#if-things-are-not-running)
+  - [CI smoke (host MCU)](#ci-smoke-host-mcu)
+  - [Migrating to printer_data](#migrating-to-printer_data)
   - [Features not implemented or not tested (yet)](#features-not-implemented-or-not-tested-yet)
   - [Credits](#credits)
 # klipper-web-control-docker
@@ -16,6 +18,17 @@ __Klipper with Moonraker shipped with Fluidd and/or Mainsail__
 - Docker Compose config and Dockerfiles provided!
 - Build with Github actions and deployed to https://hub.docker.com/u/dimalo
 - Docker multiarch builds with best practices
+
+> **Status:** Docker Hub [`dimalo/klipper-moonraker:latest`](https://hub.docker.com/r/dimalo/klipper-moonraker) is **stale (~2023)** — same lineage as GitHub `main` (~2022). Frontend Hub tags can look newer; that does **not** mean the core image is current.
+>
+> Until milestone **M1** merges smoke-tested `develop` → `main` and republishes Hub `latest`, prefer:
+> - the **`develop`** branch (includes the `printer_data` layout),
+> - Hub tag **`dimalo/klipper-moonraker:next`** (built from `develop`), or
+> - **building from source** with the Dockerfiles / Compose files in this repo.
+>
+> Config/gcode paths use Moonraker’s **`printer_data`** layout. Upgrading from `/home/klippy/.config`? See [Migrating to printer_data](#migrating-to-printer_data).
+>
+> Host-MCU CI verification (Linux `klipper_mcu`, no printer hardware): [docs/ci-smoke.md](./docs/ci-smoke.md) · [`.github/workflows/ci-smoke.yml`](./.github/workflows/ci-smoke.yml) · [README section](#ci-smoke-host-mcu).
 
 ## Features
 - Dockerhub images support x64, ARM64, ARM32v7 & ARM32v6
@@ -121,6 +134,33 @@ klipper | PermissionError: [Errno 1] Operation not permitted
 
 
 check your libseccomp version and update if needed (see [https://docs.linuxserver.io/faq#libseccomp](https://docs.linuxserver.io/faq#libseccomp))
+## CI smoke (host MCU)
+
+Verify images build and the stack answers HTTP with the **Linux host MCU** (`klipper_mcu` → `/tmp/klipper_host_mcu`) and **no printer hardware**. Smoke requires `klippy_connected` and a healthy `klippy_state`. See [docs/ci-smoke.md](./docs/ci-smoke.md) for pass/fail details.
+
+```bash
+DOCKER_BUILDKIT=1 docker build -f klipper/Dockerfile -t kwc-klipper:ci .
+DOCKER_BUILDKIT=1 docker build -f frontend/Dockerfile -t kwc-fluidd:ci ./frontend
+docker compose -f docker-compose.ci.yml up -d
+bash scripts/ci-smoke.sh
+docker compose -f docker-compose.ci.yml down -v
+```
+
+GitHub Actions workflow: `.github/workflows/ci-smoke.yml`.
+
+## Migrating to printer_data
+
+Upgrading from pre-`printer_data` images or compose files? See **[docs/migration-printer-data.md](./docs/migration-printer-data.md)** for path mapping and upgrade order.
+
+Quick helper (dry-run first):
+
+```bash
+./scripts/migrate-printer-data.sh          # preview
+docker compose down
+./scripts/migrate-printer-data.sh --apply  # rewrite compose + configs (with backups)
+docker compose pull && docker compose up -d
+```
+
 ## Features not implemented or not tested (yet)
 - compiling klipper.bin for your printer (will need compile tools which bloat the image so this will likely not be implemented)
 - automatic updates for klipper/moonraker (partly working as repos are getting updated but no dependency installs happen - update the container with ```docker-compose pull``` instead)
