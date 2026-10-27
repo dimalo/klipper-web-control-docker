@@ -7,6 +7,7 @@
     - [Install the services](#install-the-services)
     - [If things are running fine now...](#if-things-are-running-fine-now)
     - [If things are not running...](#if-things-are-not-running)
+  - [CI smoke (no MCU)](#ci-smoke-no-mcu)
   - [Features not implemented or not tested (yet)](#features-not-implemented-or-not-tested-yet)
   - [Credits](#credits)
 # klipper-web-control-docker
@@ -16,6 +17,8 @@ __Klipper with Moonraker shipped with Fluidd and/or Mainsail__
 - Docker Compose config and Dockerfiles provided!
 - Build with Github actions and deployed to https://hub.docker.com/u/dimalo
 - Docker multiarch builds with best practices
+
+> **Note:** `main` / Docker Hub `dimalo/klipper-moonraker:latest` may lag `develop`. Prefer `develop` for path layout (`printer_data`). Use the [CI smoke harness](#ci-smoke-no-mcu) to verify builds without a printer.
 
 ## Features
 - Dockerhub images support x64, ARM64, ARM32v7 & ARM32v6
@@ -121,6 +124,20 @@ klipper | PermissionError: [Errno 1] Operation not permitted
 
 
 check your libseccomp version and update if needed (see [https://docs.linuxserver.io/faq#libseccomp](https://docs.linuxserver.io/faq#libseccomp))
+## CI smoke (no MCU)
+
+Verify images build and the stack answers HTTP **without** a serial printer. See [docs/ci-smoke.md](./docs/ci-smoke.md) for pass/fail details.
+
+```bash
+DOCKER_BUILDKIT=1 docker build -f klipper/Dockerfile -t kwc-klipper:ci .
+DOCKER_BUILDKIT=1 docker build -f frontend/Dockerfile -t kwc-fluidd:ci ./frontend
+docker compose -f docker-compose.ci.yml up -d
+bash scripts/ci-smoke.sh
+docker compose -f docker-compose.ci.yml down -v
+```
+
+GitHub Actions workflow: `.github/workflows/ci-smoke.yml`.
+
 ## Features not implemented or not tested (yet)
 - compiling klipper.bin for your printer (will need compile tools which bloat the image so this will likely not be implemented)
 - automatic updates for klipper/moonraker (partly working as repos are getting updated but no dependency installs happen - update the container with ```docker-compose pull``` instead)
