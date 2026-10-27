@@ -76,9 +76,10 @@ docker logs klipper 2>&1 | tail -50
 
 ### 6. Config location
 
-Current images expect config under **`/home/klippy/printer_data/config`** (M1). Ensure `printer.cfg` is that mount, not a leftover `.config` bind — [migration](../migration-printer-data.md).
+Current images expect config under **`/home/klippy/printer_data/config`** (2.0.0). Ensure `printer.cfg` is that mount, not a leftover `.config` bind — [migration](../migration-printer-data.md).
 
 ## Also see
 
+- [README Status / images](../../README.md#status--images) — Hub vs git tags
 - [ADXL345](./adxl345.md) — SPI/`SYS_RAWIO` when using accelerometers
 - [Unraid](../platforms/unraid.md) / [Synology](../platforms/synology.md) — NAS USB quirks

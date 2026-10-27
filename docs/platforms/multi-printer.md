@@ -67,5 +67,7 @@ Uncomment and adapt that block; keep mounts on **`printer_data`** (not legacy `.
 
 ## Also see
 
+- [README Status / images](../../README.md#status--images) — Hub vs git tags
 - [MCU serial](../hardware/mcu-serial.md) — per-instance device mapping
 - [Portainer](./portainer.md) — pull-only stacks for NAS/UI hosts
+- [Migrating to printer_data](../migration-printer-data.md) — if upgrading mounts

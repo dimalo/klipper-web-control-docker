@@ -7,7 +7,7 @@ Related: [#54](https://github.com/dimalo/klipper-web-control-docker/issues/54). 
 ## Important limits
 
 - **GitHub Actions cannot validate ADXL/SPI.** CI smoke uses a Linux host MCU path only ([docs/ci-smoke.md](../ci-smoke.md)) and does not assert accelerometer hardware.
-- Retest on a **real Raspberry Pi (or similar)** with the ADXL wired and the ADXL Compose file after using a **current git `main` image** (Hub `latest` may still lag git — build locally or verify Hub dates).
+- Retest on a **real Raspberry Pi (or similar)** with the ADXL wired and the ADXL Compose file after using a **current git `main` / verified Hub image** (Hub tags may lag git — see [README Status / images](../../README.md#status--images)).
 
 ## Compose file highlights
 
@@ -46,3 +46,4 @@ docker compose -f docker-compose-adxl345.yml up -d
 
 - [MCU serial](./mcu-serial.md) — USB printer permissions (`group_add` pattern is the same idea)
 - [Migrating to printer_data](../migration-printer-data.md)
+- [README Status / images](../../README.md#status--images) — Hub vs git tags

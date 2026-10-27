@@ -1,8 +1,9 @@
 # Portainer / Compose Manager stack — pull published images only (no local build).
 # Docs: docs/platforms/portainer.md
 #
-# Git main uses printer_data mounts. Hub dimalo/klipper-moonraker:latest may still
-# lag git; verify Hub push dates or build from this repo if needed.
+# Git main / v2.0.0 uses printer_data mounts. Hub tags are not the same as git tags
+# (no Hub 2.0.0 tag yet) — verify Hub last-pushed / digest before pull, or build
+# from this repo. See README Status / images.
 #
 # Edit: serial device path, optional group_add GIDs, and the config bind path.
 

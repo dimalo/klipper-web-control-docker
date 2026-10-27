@@ -12,7 +12,7 @@ Related: [#52](https://github.com/dimalo/klipper-web-control-docker/issues/52). 
 
 ## Images
 
-Git **`main`** has the M1 `printer_data` layout. Hub **`dimalo/klipper-moonraker:latest` may still lag** git until republish — check Hub dates, build from this repo into a local registry (as @rmcmilli did), or use a tag you trust.
+Git **`main` / `v2.0.0`** uses `printer_data`. Hub tags may lag git — see [README Status / images](../../README.md#status--images). Build into a local registry if you prefer (as @rmcmilli did), or pull a tag you verified.
 
 `dimalo/fluidd` usually pulls fine without a local build.
 
@@ -26,7 +26,7 @@ Prefer mounts that match current [`docker-compose.yml`](../../docker-compose.yml
 | named volume or share for gcodes | `/home/klippy/printer_data/gcodes` |
 | named volume for Moonraker DB | `/home/klippy/printer_data/database` |
 
-Older community snippets still bind `/home/klippy/.config` — that matches **pre-M1** images only. After upgrading, use `printer_data` and see [migration](../migration-printer-data.md).
+Older community snippets still bind `/home/klippy/.config` — that matches **pre-2.0.0** images only. After upgrading, use `printer_data` and see [migration](../migration-printer-data.md).
 
 Ensure the Unraid user/share permissions allow the container user to read/write the config and gcode paths (ownership/`chmod` on the appdata folder is a common footgun on NAS).
 
@@ -75,9 +75,9 @@ USB cameras in Fluidd are best-effort on Unraid (reported exception in the 2025 
 
 See [MCU serial checklist](../hardware/mcu-serial.md). Prefer explicit `devices:` + `group_add` over blanket `privileged: true`.
 
-## Uploads / paths after M1
+## Uploads / paths after 2.0.0
 
-G-code upload and config-path bugs tracked in [#41](https://github.com/dimalo/klipper-web-control-docker/issues/41) / [#63](https://github.com/dimalo/klipper-web-control-docker/issues/63) should be retested on **post-M1 git `main`** (and Hub `latest` once republished). If you still run an old image with `.config` mounts, migrate first.
+G-code upload and config-path bugs tracked in [#41](https://github.com/dimalo/klipper-web-control-docker/issues/41) / [#63](https://github.com/dimalo/klipper-web-control-docker/issues/63) should be retested on **git `main` / Hub `latest` you verified**. If you still run an old image with `.config` mounts, migrate first.
 
 ## Also see
 

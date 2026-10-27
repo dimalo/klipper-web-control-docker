@@ -6,15 +6,12 @@ Related: [#31](https://github.com/dimalo/klipper-web-control-docker/issues/31).
 
 ## Images / tags
 
-Git **`main`** already includes the M1 `printer_data` layout. Docker Hub **`dimalo/klipper-moonraker:latest` may still lag** (last multiarch push can be older than git) until Hub republish catches up.
+Git **`main` / `v2.0.0`** ships the `printer_data` layout. Hub tags may lag or differ from git tags — see [README Status / images](../../README.md#status--images) (verify Hub last-pushed / digest; use `latest` or a date tag; no Hub `2.0.0` tag yet).
 
 | Goal | Suggestion |
 | --- | --- |
-| Match current git `main` | Build from this repo, **or** pull after Hub `latest` is refreshed |
-| Older develop-line builds | `dimalo/klipper-moonraker:next` (may also lag; check Hub push dates) |
+| Match current git `main` | Pull a verified Hub `latest` / date tag, **or** build from this repo |
 | Frontend | `dimalo/fluidd` (or build `frontend/`) |
-
-Confirm digests/dates on Hub before trusting `latest` on a printer host.
 
 ## Stack YAML (paste into Portainer)
 

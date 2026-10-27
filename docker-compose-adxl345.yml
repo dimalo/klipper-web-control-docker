@@ -1,6 +1,6 @@
 # ADXL345 / SPI example — see docs/hardware/adxl345.md
 # Replace group_add GIDs with your host's `ls -l /dev/spidev* /dev/gpiomem` groups.
-# Not used by CI; validate on real Pi hardware. Hub latest may lag git main.
+# Not used by CI; validate on real Pi hardware. Verify Hub digest/date (README Status).
 services:
   klipper:
     image: dimalo/klipper-moonraker

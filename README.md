@@ -2,188 +2,77 @@
 ![Klipper Moonraker Multiarch Image CI](https://github.com/dimalo/klipper-web-control-docker/workflows/Klipper%20Moonraker%20Multiarch%20Image%20CI/badge.svg)
 
 - [klipper-web-control-docker](#klipper-web-control-docker)
+  - [Status / images](#status--images)
+  - [Quickstart](#quickstart)
+  - [Docs map](#docs-map)
   - [Features](#features)
-  - [Getting started](#getting-started)
-    - [Install the services](#install-the-services)
-    - [If things are running fine now...](#if-things-are-running-fine-now)
-    - [If things are not running...](#if-things-are-not-running)
-  - [Platforms](#platforms)
-  - [Hardware](#hardware)
-  - [CI smoke (host MCU)](#ci-smoke-host-mcu)
-  - [Migrating to printer_data](#migrating-to-printer_data)
-  - [Features not implemented or not tested (yet)](#features-not-implemented-or-not-tested-yet)
   - [Credits](#credits)
+
 # klipper-web-control-docker
+
 __Klipper with Moonraker shipped with Fluidd and/or Mainsail__
 
-- get your printer to the next level!
-- Docker Compose config and Dockerfiles provided!
-- Build with Github actions and deployed to https://hub.docker.com/u/dimalo
-- Docker multiarch builds with best practices
+## Status / images
 
-> **Status:** GitHub **`main`** includes the M1 ship (`printer_data` layout, CI smoke). Docker Hub [`dimalo/klipper-moonraker:latest`](https://hub.docker.com/r/dimalo/klipper-moonraker) **may still lag** git until multiarch republish succeeds — check Hub push dates before relying on `latest`. Frontend Hub tags can look newer than the core image.
+> **Git** [`main`](https://github.com/dimalo/klipper-web-control-docker) / tag [`v2.0.0`](https://github.com/dimalo/klipper-web-control-docker/releases/tag/v2.0.0) is the source of truth for layout, Compose, and docs. Release notes: [`CHANGELOG.md`](./CHANGELOG.md).
 >
-> Prefer:
-> - this repo’s **`main`** (or build from the Dockerfiles / Compose files here),
-> - Hub tag **`dimalo/klipper-moonraker:next`** only if its Hub date is acceptable, or
-> - wait for / verify a refreshed **`latest`**.
+> **Docker Hub** [`dimalo/klipper-moonraker:latest`](https://hub.docker.com/r/dimalo/klipper-moonraker/tags) was republished with the 2.0.0 line (post-[#75](https://github.com/dimalo/klipper-web-control-docker/pull/75), 2026-10-27). There is **no** Hub tag named `2.0.0` yet — pull **`latest`** or a **date tag** (e.g. `20261027-1727`), and still check Hub **last-pushed / digest** before trusting a printer host. Git tags and Hub tags are not the same channel until a version tag exists on Hub.
 >
-> Config/gcode paths use Moonraker’s **`printer_data`** layout. Upgrading from `/home/klippy/.config`? See [Migrating to printer_data](#migrating-to-printer-data).
+> Prefer build-from-repo when you need a known git SHA. Frontend Hub tags (`dimalo/fluidd`, `dimalo/mainsail`) can move on a different cadence than the core image — pin/verify **core** explicitly. `:next` is optional interim; date-check it the same way.
 >
-> Host-MCU CI verification (Linux `klipper_mcu`, no printer hardware): [docs/ci-smoke.md](./docs/ci-smoke.md) · [`.github/workflows/ci-smoke.yml`](./.github/workflows/ci-smoke.yml) · [README section](#ci-smoke-host-mcu).
+> Paths use Moonraker’s **`printer_data`** layout. Upgrading from `/home/klippy/.config`? → [docs/migration-printer-data.md](./docs/migration-printer-data.md).
+
+## Quickstart
+
+**Prerequisites:** Linux or MacOS host with Docker Compose v2; printer firmware flashed; serial device known (e.g. `/dev/ttyUSB0`). MacOS cannot pass serial into containers ([docker/for-mac#900](https://github.com/docker/for-mac/issues/900)) — see [docs/hardware/mcu-serial.md](./docs/hardware/mcu-serial.md).
+
+1. Clone this repo and adjust Compose (serial in [`docker-compose.hw.yml`](./docker-compose.hw.yml); optional `printer.cfg` mount under `printer_data/config`).
+2. **With a real printer:**
+
+   ```bash
+   docker compose -f docker-compose.yml -f docker-compose.hw.yml pull
+   docker compose -f docker-compose.yml -f docker-compose.hw.yml up
+   ```
+
+   Omit `pull` to build from this repo’s Dockerfiles instead.
+3. **Ports:** Moonraker **7125**, Fluidd **8010**. Mainsail **8011** only after you uncomment the `mainsail` service in [`docker-compose.yml`](./docker-compose.yml) (commented out by default).
+4. Open http://localhost:8010 — upload/edit `printer.cfg`, confirm Klipper connects to the MCU.
+
+**No printer hardware?** Plain `docker compose up` brings containers up for editing configs, but it is **not** a reliable “Klippy Ready / Fluidd proxy works” path (stock config has no primary printer MCU; default `klipper_mcu` may fail without the CI supervisor override; some hosts break Fluidd→Moonraker over the Docker bridge). For no-hardware verification use the **host-MCU CI stack**: [docs/ci-smoke.md](./docs/ci-smoke.md).
+
+**Not running?** Serial/permissions → [docs/hardware/mcu-serial.md](./docs/hardware/mcu-serial.md). Klipper `libseccomp` / time errors → update libseccomp ([linuxserver FAQ](https://docs.linuxserver.io/faq#libseccomp)).
+
+When things look good, stop the foreground session (`Ctrl+C`) and re-run the same `docker compose … up -d` command.
+
+## Docs map
+
+| Topic | Doc |
+| --- | --- |
+| Release notes | [`CHANGELOG.md`](./CHANGELOG.md) · [v2.0.0](https://github.com/dimalo/klipper-web-control-docker/releases/tag/v2.0.0) |
+| Migration (`.config` → `printer_data`) | [docs/migration-printer-data.md](./docs/migration-printer-data.md) |
+| CI smoke / no-hardware host MCU | [docs/ci-smoke.md](./docs/ci-smoke.md) |
+| Frontends (Hub vs GHCR) | [docs/frontend-strategy.md](./docs/frontend-strategy.md) |
+| Portainer | [docs/platforms/portainer.md](./docs/platforms/portainer.md) · [`examples/portainer-stack.yml`](./examples/portainer-stack.yml) |
+| Multi-printer / Fluidd | [docs/platforms/multi-printer.md](./docs/platforms/multi-printer.md) |
+| Unraid | [docs/platforms/unraid.md](./docs/platforms/unraid.md) |
+| Synology | [docs/platforms/synology.md](./docs/platforms/synology.md) |
+| MCU serial | [docs/hardware/mcu-serial.md](./docs/hardware/mcu-serial.md) |
+| ADXL345 / input shaper | [docs/hardware/adxl345.md](./docs/hardware/adxl345.md) |
 
 ## Features
-- Dockerhub images support x64, ARM64, ARM32v7 & ARM32v6
-- Docker multistage builds for optimized image sizes
-- fully integrated klipper image with moonraker enabled
-  - startup management with supervisord & dependent startup (klipper starts first, then only if klipper is running moonraker is started)
-- Optionally use the klipper_z_calibration-extension
-- collection of useful klipper macros [see client_macros.cfg](./config/client_macros.cfg)
-  - Nozzle prime line with random Y starting point
-    
-    Don't use the same starting point for priming to reduce bed wear!
-  
-  - safe filament load / unload / change, which checks for sufficient (configurable) nozzle temperature
 
-  - best practice start gcode:
+- Multiarch Hub images: **amd64, arm64, arm/v7** (arm/v6 dropped with the bookworm base — see [#75](https://github.com/dimalo/klipper-web-control-docker/pull/75))
+- Multistage builds; supervisord starts Klipper then Moonraker
+- Fluidd and optional Mainsail (run both if you enable Mainsail in Compose)
+- Config under **`printer_data`** (`config`, `gcodes`, `database`) — mount `printer.cfg` at `/home/klippy/printer_data/config/printer.cfg` or supply it via the UI
+- Optional [klipper_z_calibration](https://github.com/protoloft/klipper_z_calibration) extension
+- Useful macros in [`config/client_macros.cfg`](./config/client_macros.cfg) and calibration helpers in [`config/calibration_macros.cfg`](./config/calibration_macros.cfg) — review before running on a real printer
+- ADXL345 example: [`docker-compose-adxl345.yml`](./docker-compose-adxl345.yml) · [docs/hardware/adxl345.md](./docs/hardware/adxl345.md)
 
-    Please modify this to your needs! This macro works well on my cartesian and core xy machines and only homes Z as soon as the nozzle is hot, so leftover extrusions don't smash into the bed when they're cold.
-
-    Example for PrusaSlicer start gcode:
-
-    ```
-    ; Making sure PrusaSlicer doesn't inject heatup gcode...
-    M104 S0
-    M190 S0
-    ; Run START_PRINT macro
-    START_PRINT T_BED=[first_layer_bed_temperature] T_EXTRUDER=[first_layer_temperature]
-    ```
-
-  - several versions of pause/cancel/end, to either present the toolhead or the print (and get the toolhead out of the way) - ___check the defaults!___
-
-  - park toolhead with ```M125``` (default X25 Y0)
-
-  - support delay with display output with ```COUNTDOWN```
-
-  ___Please be careful to not run the macros without making sure they work with your printer!___
-- collection of calibration macros (for example manual bed leveling) [see calibration_macros.cfg](./config/calibration_macros.cfg)
-- complete Klipper setup with web control client
-  - supports [Fluidd](https://github.com/fluidd-core/fluidd)
-  - supports [Mainsail](https://github.com/mainsail-crew/mainsail)
-  - you can even run both in parallel!
-- only your printer.cfg is required
-  - the services start without it, so you can supply your config through the web UI
-  - you can mount your config file to `/home/klippy/printer_data/config/printer.cfg`, and klipper will pick it up after a restart
-- ADXL345 / input-shaper example Compose: [`docker-compose-adxl345.yml`](./docker-compose-adxl345.yml) · [docs/hardware/adxl345.md](./docs/hardware/adxl345.md)
-
-## Getting started
-
-___Prerequisites:___
-- _Your klipper host machine runs Linux or MacOS (Windows was not tested yet)_
-    - (MacOS) Currently it is not possible to expose serial devices to a container in MacOS Docker. This is a known issue with Docker (https://github.com/docker/for-mac/issues/900)
-- _You have Docker with the Compose v2 plugin (`docker compose`) installed; legacy `docker-compose` usually works too_
-- _You have flashed your printer with the appropriate .bin_
-- _You have your printer connected to your machine and you know it's serial mount point (e.g. /dev/ttyACM0 or /dev/ttyUSB0)_
-- _ARM32v6 (Raspberry Pi Zero and 1) requires [Docker 20](https://docs.docker.com/engine/install/debian/#install-using-the-convenience-script). Fluidd is not yet supported_
-
-### Install the services
-
-1. clone this repository and open it or navigate to it in your terminal
-1. modify compose files to your needs
-    - set serial port of your printer in [`docker-compose.hw.yml`](./docker-compose.hw.yml) (default `docker-compose.yml` has **no** `devices:` so CI/Portainer validate without USB)
-    - mount printer.cfg if already prepared (else you will be able to set it up later as well...)
-1. with a real printer: `docker compose -f docker-compose.yml -f docker-compose.hw.yml pull && docker compose -f docker-compose.yml -f docker-compose.hw.yml up` (omit `pull` to build from this repo). Without hardware: `docker compose up` is enough to bring Fluidd/Moonraker up for config work.
-1. watch the services being set up
-    - make sure you have no port conflicts on 7125, 8010 and 8011 
-    - make sure klipper and moonraker started
-    - leave the compose session running
-1. test the frontends
-    - http://localhost:8010
-    - http://localhost:8011
-1. configure your printer
-    - modify / upload printer.cfg, if not mounted already
-    - check if klipper is able to connect to the printer
-    - follow klippers documentation to test your printers functionality
-
-### If things are running fine now...
-Quit the compose session with ```Ctrl+C``` and run the same `docker compose … up -d` command you used above.
-
-__Happy 3D Printing!__
-
-### If things are not running...
-
-__No serial connection:__
-
-See the full checklist: **[docs/hardware/mcu-serial.md](./docs/hardware/mcu-serial.md)** (by-id paths, `devices:`, `group_add`, MacOS limitation, CI does not assert MCU ready).
-
-Quick start: on the host run `ls -l /dev/ttyACM0` (or your device), map it under `devices:` in [`docker-compose.hw.yml`](./docker-compose.hw.yml), and set matching numeric GIDs under `group_add` there (uncomment the example). Recreate with `docker compose -f docker-compose.yml -f docker-compose.hw.yml up -d`. Prefer `group_add` over rebuilding with legacy device GID build-args.
-
-__Klipper is crashing:__
-
-(from [#25](https://github.com/dimalo/klipper-web-control-docker/issues/25))
-
-_Klipper crashes with log similar to:_
-```log
-klipper Fatal Python error: pyinit_main: can't initialize time
-klipper | Python runtime state: core initialized
-klipper | PermissionError: [Errno 1] Operation not permitted
-```
-
-
-check your libseccomp version and update if needed (see [https://docs.linuxserver.io/faq#libseccomp](https://docs.linuxserver.io/faq#libseccomp))
-
-## Platforms
-
-Docs-only guides (same images; no platform-specific Hub product):
-
-- [Portainer stack](./docs/platforms/portainer.md) · example [`examples/portainer-stack.yml`](./examples/portainer-stack.yml) (#31)
-- [Multi-printer / Fluidd](./docs/platforms/multi-printer.md) (#34)
-- [Unraid Compose Manager](./docs/platforms/unraid.md) (#52)
-- [Synology Container Manager](./docs/platforms/synology.md) (#53)
-
-## Hardware
-
-- [MCU serial / device mapping](./docs/hardware/mcu-serial.md) (#59)
-- [ADXL345 / input shaper](./docs/hardware/adxl345.md) (#54)
-
-## CI smoke (host MCU)
-
-Verify images build and the stack answers HTTP with the **Linux host MCU** (`klipper_mcu` → `/tmp/klipper_host_mcu`) and **no printer hardware**. Smoke requires `klippy_connected` and a healthy `klippy_state`. See [docs/ci-smoke.md](./docs/ci-smoke.md) for pass/fail details.
-
-```bash
-DOCKER_BUILDKIT=1 docker build -f klipper/Dockerfile -t kwc-klipper:ci .
-DOCKER_BUILDKIT=1 docker build -f frontend/Dockerfile -t kwc-fluidd:ci ./frontend
-docker compose -f docker-compose.ci.yml up -d
-bash scripts/ci-smoke.sh
-docker compose -f docker-compose.ci.yml down -v
-```
-
-GitHub Actions workflow: `.github/workflows/ci-smoke.yml`.
-
-## Migrating to printer_data
-
-Upgrading from pre-`printer_data` images or compose files? See **[docs/migration-printer-data.md](./docs/migration-printer-data.md)** for path mapping and upgrade order.
-
-Quick helper (dry-run first):
-
-```bash
-./scripts/migrate-printer-data.sh          # preview
-docker compose down
-./scripts/migrate-printer-data.sh --apply  # rewrite compose + configs (with backups)
-docker compose pull && docker compose up -d
-```
-
-## Features not implemented or not tested (yet)
-- compiling klipper.bin for your printer (will need compile tools which bloat the image so this will likely not be implemented)
-- automatic updates for klipper/moonraker (refs are pinned in `upstream.lock`; bump via PR + CI smoke, then `docker compose pull`)
-- automatic updates for the frontend (pinned release zips; see [docs/frontend-strategy.md](./docs/frontend-strategy.md))
+**Not in this image:** compiling `klipper.bin` for your MCU; floating automatic updates (refs pinned in `upstream.lock` / frontend release zips — see [docs/frontend-strategy.md](./docs/frontend-strategy.md)).
 
 ## Credits
-- where I found some of the macros
-  - [https://github.com/fl0r1s/klipper_config](https://github.com/fl0r1s/klipper_config)
-- [Klipper](https://github.com/Klipper3d/klipper)
-- [Moonraker](https://github.com/Arksine/moonraker)
-- [Fluidd](https://github.com/fluidd-core/fluidd)
-- [Mainsail](https://github.com/mainsail-crew/mainsail)
-- [klipper_z_calibration](https://github.com/protoloft/klipper_z_calibration)
-- awesome global RepRap open source community!
+
+- Macro inspiration: [fl0r1s/klipper_config](https://github.com/fl0r1s/klipper_config)
+- [Klipper](https://github.com/Klipper3d/klipper) · [Moonraker](https://github.com/Arksine/moonraker) · [Fluidd](https://github.com/fluidd-core/fluidd) · [Mainsail](https://github.com/mainsail-crew/mainsail) · [klipper_z_calibration](https://github.com/protoloft/klipper_z_calibration)
+- RepRap / open-source community

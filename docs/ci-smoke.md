@@ -1,6 +1,10 @@
 # CI smoke harness (Linux host MCU, no printer)
 
-Verification loop for this repo: **build images → compose up → assert HTTP, Linux host MCU, healthier Klippy, file/upload paths, management APIs, and restarts**, without USB printer hardware.
+Verification loop for this repo (gate for PRs / pushes to **`main`**): **build images → compose up → assert HTTP, Linux host MCU, healthier Klippy, file/upload paths, management APIs, and restarts**, without USB printer hardware.
+
+This harness does **not** prove Docker Hub digests match git — see [README Status / images](../README.md#status--images). Prefer building local `:ci` tags (below) or retagging a Hub image you already verified.
+
+**No-hardware getting started:** use this stack when you need Fluidd ↔ Moonraker with **Klippy Ready**. Plain `docker compose up` (default compose, no host MCU override) is not a reliable ready-UI path — see README Quickstart.
 
 ## Host MCU in CI
 
@@ -39,6 +43,7 @@ CI does **not** use a dummy missing serial. Instead:
 - Host reboot/shutdown (`/machine/reboot`, `/machine/shutdown`)
 - Firmware flash / update_manager installs
 - Realtime scheduling for `klipper_mcu` (`-r` / `SCHED_FIFO`)
+- Full printer macros — CI mounts `config/ci/`, whose `client_macros.cfg` is a stub (no `CANCEL_PRINT`). Fluidd may warn about missing macros; that is expected for this demo, not a Moonraker outage. Default `./config` mounts include the real macros.
 
 ## CI Moonraker machine provider
 
@@ -70,8 +75,17 @@ bash scripts/ci-smoke.sh
 docker compose -f docker-compose.ci.yml down -v
 ```
 
+To exercise published Hub images instead of a local build, pull + retag then run the same compose/smoke commands:
+
+```bash
+docker pull dimalo/klipper-moonraker:latest
+docker pull dimalo/fluidd:latest
+docker tag dimalo/klipper-moonraker:latest kwc-klipper:ci
+docker tag dimalo/fluidd:latest kwc-fluidd:ci
+```
+
 ## GitHub Actions
 
-Workflow: `.github/workflows/ci-smoke.yml` — runs on pushes/PRs to `develop` / `main` and `cursor/**` branches. Builds both images, brings the stack up, runs `scripts/ci-smoke.sh`, dumps logs on failure.
+Workflow: `.github/workflows/ci-smoke.yml` — runs on pushes/PRs to `develop` / `main` and `cursor/**` branches. Builds both images, brings the stack up, runs `scripts/ci-smoke.sh`, dumps logs on failure. A green Actions run validates the **git tree under test**, not Hub tag freshness.
 
 Core image builds clone upstream Klipper/Moonraker and can take **tens of minutes** on a cold runner.
