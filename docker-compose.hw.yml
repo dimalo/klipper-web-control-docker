@@ -1,0 +1,20 @@
+# Hardware override — serial MCU mapping for a real printer.
+# Default docker-compose.yml has no host devices so CI / Portainer /
+# compose-config without USB still validate.
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.hw.yml up -d
+#
+# Prefer a stable /dev/serial/by-id/… host path when available.
+# See docs/hardware/mcu-serial.md.
+
+services:
+  klipper:
+    # if klipper cannot connect to the printer check permissions on the host
+    # then add matching numeric GIDs here (ls -l /dev/ttyUSB0; getent group dialout)
+    # group_add:
+    #   - "20"
+    #   - "996"
+    devices:
+      # host_path:container_path — put the container path in printer.cfg [mcu] serial:
+      - /dev/ttyUSB0:/dev/ttyUSB0

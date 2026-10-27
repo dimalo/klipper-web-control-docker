@@ -1,11 +1,13 @@
-FROM python:3.11
+FROM python:3.11-bookworm
 
 ARG DEBIAN_FRONTEND=noninteractive
-ARG KLIPPER_BRANCH="master"
+# Keep in sync with upstream.lock
+ARG KLIPPER_REF=ee2c6fb6b00b2b5d097ef70d0868df7d74943b51
 
 ARG USER=klippy
 ARG HOME=/home/${USER}
 ARG KLIPPER_VENV_DIR=${HOME}/klippy-env
+
 
 ENV PKGLIST="libffi-dev build-essential"
 ENV PKGLIST="${PKGLIST} libncurses-dev"
@@ -38,7 +40,8 @@ USER ${USER}
 WORKDIR ${HOME}
 
 ### Klipper setup ###
-RUN git clone --single-branch --branch ${KLIPPER_BRANCH} https://github.com/Klipper3d/klipper.git klipper
+RUN git clone https://github.com/Klipper3d/klipper.git klipper && \
+    git -C klipper checkout --detach ${KLIPPER_REF}
 RUN [ ! -d ${KLIPPER_VENV_DIR} ] && python3 -m venv ${KLIPPER_VENV_DIR}
 RUN ${KLIPPER_VENV_DIR}/bin/pip install wheel
 

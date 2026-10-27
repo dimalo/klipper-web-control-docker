@@ -17,17 +17,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Get current date
         id: date
-        run: echo "::set-output name=date::$(date +'%Y%m%d-%H%M')"
+        run: echo "date=$(date +'%Y%m%d-%H%M')" >> "$GITHUB_OUTPUT"
+
+      - name: Read upstream.lock
+        id: lock
+        run: |
+          # shellcheck disable=SC1091
+          set -a
+          # strip comments / blank lines then source KEY=value lines
+          eval "$(grep -E '^[A-Z0-9_]+=' upstream.lock)"
+          set +a
+          echo "klipper_ref=${KLIPPER_REF}" >> "$GITHUB_OUTPUT"
+          echo "moonraker_ref=${MOONRAKER_REF}" >> "$GITHUB_OUTPUT"
+          echo "z_calibration_ref=${Z_CALIBRATION_REF}" >> "$GITHUB_OUTPUT"
 
       - name: Prepare
         id: prep
         run: |
           DOCKER_IMAGE=${{ secrets.DOCKER_USERNAME }}/klipper-moonraker
-          DATE=${{steps.date.outputs.date}}
+          DATE=${{ steps.date.outputs.date }}
           BRANCH=${GITHUB_REF##*/}
 
           # If this is git tag, use the tag name as a docker tag
@@ -47,42 +59,46 @@ jobs:
             # tag it with the VERSION, else use DATE.
             BASE_TAG=latest
             if [[ $VERSION =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
-              TAGS="$TAGS,${DOCKER_IMAGE}:${BASE_TAG}"
+              TAGS="${DOCKER_IMAGE}:${BASE_TAG},${DOCKER_IMAGE}:${VERSION},${DOCKER_IMAGE}:${DATE}"
             else
               TAGS="${DOCKER_IMAGE}:${BASE_TAG},${DOCKER_IMAGE}:${DATE}"
             fi
-
           fi
 
-          # Set output parameters.
-          echo ::set-output name=tags::${TAGS}
-          echo ::set-output name=docker_image::${DOCKER_IMAGE}
-          echo ::set-output name=base_tag::${BASE_TAG}
+          {
+            echo "tags=${TAGS}"
+            echo "docker_image=${DOCKER_IMAGE}"
+            echo "base_tag=${BASE_TAG}"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@master
+        uses: docker/setup-qemu-action@v3
         with:
           platforms: all
 
       - name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@master
+        uses: docker/setup-buildx-action@v3
 
       - name: Login to DockerHub
         if: github.event_name != 'pull_request'
-        uses: docker/login-action@v1
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v5
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
           file: ./klipper/Dockerfile
           platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6
-          push: true
+          push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.prep.outputs.tags }}
+          build-args: |
+            KLIPPER_REF=${{ steps.lock.outputs.klipper_ref }}
+            MOONRAKER_REF=${{ steps.lock.outputs.moonraker_ref }}
+            Z_CALIBRATION_REF=${{ steps.lock.outputs.z_calibration_ref }}
           cache-from: type=registry,ref=${{ steps.prep.outputs.docker_image }}:${{ steps.prep.outputs.base_tag }}
           cache-to: type=inline

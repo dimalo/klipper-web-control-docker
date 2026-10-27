@@ -91,7 +91,7 @@ services:
   #     dockerfile: Dockerfile
   #     context: frontend
   #     args:
-  #       FRONTEND_ZIP_URL: https://github.com/meteyou/mainsail/releases/latest/download/mainsail.zip
+  #       FRONTEND_ZIP_URL: https://github.com/mainsail-crew/mainsail/releases/download/v2.19.0/mainsail.zip
   #   container_name: mainsail
   #   ports:
   #     - 8011:80
