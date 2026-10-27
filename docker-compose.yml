@@ -1,14 +1,16 @@
+# Default stack: no host serial devices (CI / Portainer / dry config validate).
+# For a real printer MCU, also merge docker-compose.hw.yml:
+#   docker compose -f docker-compose.yml -f docker-compose.hw.yml up -d
+# See docs/hardware/mcu-serial.md
+
 services:
   klipper:
     image: dimalo/klipper-moonraker
     build:
       dockerfile: ./klipper/Dockerfile
       context: .
-    # if klipper cannot connect to the printer check permissions on rpi then add the group here
-    # see docs/hardware/mcu-serial.md
-    # group_add:
-    #   - "996"
-    #   - "998"
+    # Runtime group_add for serial permissions lives in docker-compose.hw.yml
+    # (or set GIDs there / in your stack). See docs/hardware/mcu-serial.md
     cap_add:
       - SYS_NICE
     container_name: klipper
@@ -24,11 +26,6 @@ services:
       - moonraker_data:/home/klippy/printer_data/database
       # - <<your_config_path>>:/home/klippy/printer_data/config
       # - ./printer.cfg:/home/klippy/printer_data/config/printer.cfg
-    # mount serial device - take care to grant sufficient permissions to the device: <host_dev>:<container_dev>
-    # put <container_dev> into your printer.cfg
-      
-    devices:
-      - /dev/ttyUSB0:/dev/ttyUSB0
 
   ##################################################################
   # Example config for a second printer on a different serial port
@@ -57,8 +54,7 @@ services:
   #     - moonraker_data_another:/home/klippy/printer_data/database
   #     # - <<your_config_path>>:/home/klippy/printer_data/config
   #     # - ./another_printer.cfg:/home/klippy/printer_data/config/printer.cfg
-  #   # mount serial device - take care to grant sufficient permissions to the device: <host_dev>:<container_dev>
-  #   # put <container_dev> into your printer.cfg
+  #   # map serial in an override or uncomment devices: for the second MCU
   #   devices:
   #     - /dev/ttyACM0:/dev/ttyACM0
 
@@ -85,7 +81,8 @@ services:
   #     dockerfile: Dockerfile
   #     context: frontend
   #     args:
-  #       FRONTEND_ZIP_URL: https://github.com/meteyou/mainsail/releases/latest/download/mainsail.zip
+  #       # Keep in sync with upstream.lock MAINSAIL_ZIP_URL
+  #       FRONTEND_ZIP_URL: https://github.com/mainsail-crew/mainsail/releases/download/v2.19.0/mainsail.zip
   #   container_name: mainsail
   #   ports:
   #     - 8011:80

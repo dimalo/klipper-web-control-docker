@@ -1,6 +1,7 @@
 FROM alpine as unzip
 
-ARG FRONTEND_ZIP_URL=https://github.com/cadriel/fluidd/releases/latest/download/fluidd.zip
+# Keep in sync with upstream.lock (Fluidd). Override for Mainsail builds in CI.
+ARG FRONTEND_ZIP_URL=https://github.com/fluidd-core/fluidd/releases/download/v1.37.7/fluidd.zip
 
 WORKDIR /frontend
 

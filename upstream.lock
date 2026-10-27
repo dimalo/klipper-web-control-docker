@@ -1,0 +1,13 @@
+# Locked upstream refs for reproducible image builds.
+# Bump via PR; verify with CI smoke (host MCU) before merging to main.
+# Keep Dockerfile / frontend ARG defaults and publish workflow build-args in sync.
+
+KLIPPER_REF=ee2c6fb6b00b2b5d097ef70d0868df7d74943b51
+MOONRAKER_REF=b559b9a81161f958a43c2f527b6ad96f73310d5d
+Z_CALIBRATION_REF=374d487feabe738e910b1b1d2f68ceaf3742a235
+
+FLUIDD_RELEASE=v1.37.7
+FLUIDD_ZIP_URL=https://github.com/fluidd-core/fluidd/releases/download/v1.37.7/fluidd.zip
+
+MAINSAIL_RELEASE=v2.19.0
+MAINSAIL_ZIP_URL=https://github.com/mainsail-crew/mainsail/releases/download/v2.19.0/mainsail.zip

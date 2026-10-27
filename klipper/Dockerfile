@@ -1,8 +1,10 @@
-FROM python:3.11 as builder
+FROM python:3.11-bookworm as builder
 
 ARG DEBIAN_FRONTEND=noninteractive
-ARG KLIPPER_BRANCH="master"
-ARG MOONRAKER_BRANCH="master"
+# Keep in sync with upstream.lock (bump via PR + CI smoke).
+ARG KLIPPER_REF=ee2c6fb6b00b2b5d097ef70d0868df7d74943b51
+ARG MOONRAKER_REF=b559b9a81161f958a43c2f527b6ad96f73310d5d
+ARG Z_CALIBRATION_REF=374d487feabe738e910b1b1d2f68ceaf3742a235
 
 ARG USER=klippy
 ARG HOME=/home/${USER}
@@ -50,8 +52,10 @@ USER ${USER}
 WORKDIR ${HOME}
 
 ### Klipper setup ###
-RUN git clone --single-branch --branch ${KLIPPER_BRANCH} https://github.com/Klipper3d/klipper.git klipper
-RUN git clone --single-branch --branch master https://github.com/protoloft/klipper_z_calibration.git klipper_z_calibration
+RUN git clone https://github.com/Klipper3d/klipper.git klipper && \
+    git -C klipper checkout --detach ${KLIPPER_REF}
+RUN git clone https://github.com/protoloft/klipper_z_calibration.git klipper_z_calibration && \
+    git -C klipper_z_calibration checkout --detach ${Z_CALIBRATION_REF}
 RUN ln -sf klipper_z_calibration/z_calibration.py klipper/klippy/extras/z_calibration.py
 RUN [ ! -d ${KLIPPER_VENV_DIR} ] && python3 -m venv ${KLIPPER_VENV_DIR}
 
@@ -66,7 +70,8 @@ RUN make
 
 WORKDIR ${HOME}
 # Install moonraker
-RUN git clone --single-branch --branch ${MOONRAKER_BRANCH} https://github.com/Arksine/moonraker.git moonraker
+RUN git clone https://github.com/Arksine/moonraker.git moonraker && \
+    git -C moonraker checkout --detach ${MOONRAKER_REF}
 RUN [ ! -d ${MOONRAKER_VENV_DIR} ] && python3 -m venv ${MOONRAKER_VENV_DIR}
 
 WORKDIR ${HOME}/moonraker
@@ -80,7 +85,7 @@ RUN git clone https://github.com/jacksonliam/mjpg-streamer.git
 RUN cd mjpg-streamer/mjpg-streamer-experimental && make
 RUN mv mjpg-streamer/mjpg-streamer-experimental/* mjpg-streamer && rm -rf mjpg-streamer/mjpg-streamer-experimental
 
-FROM python:3.11-slim as image
+FROM python:3.11-slim-bookworm as image
 
 ARG DEBIAN_FRONTEND=noninteractive
 

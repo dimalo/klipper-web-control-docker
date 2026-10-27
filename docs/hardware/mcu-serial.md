@@ -25,7 +25,9 @@ Prefer a stable **`/dev/serial/by-id/usb-…`** symlink so ports do not jump aft
 
 ### 2. Map into Compose
 
-In [`docker-compose.yml`](../../docker-compose.yml) (or your Portainer/NAS stack):
+Default [`docker-compose.yml`](../../docker-compose.yml) has **no** host `devices:` (so CI and Portainer can validate without USB). Put serial mapping in [`docker-compose.hw.yml`](../../docker-compose.hw.yml) (or your Portainer/NAS stack) and merge:
+
+`docker compose -f docker-compose.yml -f docker-compose.hw.yml up -d`
 
 ```yaml
 devices:
@@ -52,7 +54,7 @@ ls -l /dev/ttyUSB0
 getent group dialout tty
 ```
 
-This project’s current Compose uses runtime **`group_add`** with numeric GIDs (see comments in `docker-compose.yml` / [`docker-compose-adxl345.yml`](../../docker-compose-adxl345.yml)). Uncomment and set GIDs to match the host — **do not** rely on outdated README “build-arg `DEVICE_GID` then rebuild” as the primary fix (legacy image build args may still exist in Dockerfiles; prefer `group_add` on current compose).
+This project’s hardware override uses runtime **`group_add`** with numeric GIDs (see comments in [`docker-compose.hw.yml`](../../docker-compose.hw.yml) / [`docker-compose-adxl345.yml`](../../docker-compose-adxl345.yml)). Uncomment and set GIDs to match the host — **do not** rely on outdated README “build-arg `DEVICE_GID` then rebuild” as the primary fix (legacy image build args may still exist in Dockerfiles; prefer `group_add` on current compose).
 
 ```yaml
 group_add:
