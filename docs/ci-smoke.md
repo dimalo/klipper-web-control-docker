@@ -41,7 +41,7 @@ CI does **not** use a dummy missing serial. Instead:
 - ADXL345 / SPI / GPIO bit-banging beyond host MCU process stay-up
 - Webcam / mjpg-streamer healthy
 - Host reboot/shutdown (`/machine/reboot`, `/machine/shutdown`)
-- Firmware flash / update_manager installs
+- Firmware flash / Update Manager installs (stock conf omits `[update_manager]`; see [docs/updates.md](./updates.md))
 - Realtime scheduling for `klipper_mcu` (`-r` / `SCHED_FIFO`)
 - Full printer macros — CI mounts `config/ci/`, whose `client_macros.cfg` is a stub (no `CANCEL_PRINT`). Fluidd may warn about missing macros; that is expected for this demo, not a Moonraker outage. Default `./config` mounts include the real macros.
 

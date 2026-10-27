@@ -49,6 +49,7 @@ When things look good, stop the foreground session (`Ctrl+C`) and re-run the sam
 | Topic | Doc |
 | --- | --- |
 | Release notes | [`CHANGELOG.md`](./CHANGELOG.md) · [v2.0.0](https://github.com/dimalo/klipper-web-control-docker/releases/tag/v2.0.0) |
+| **Updating this stack** (not Fluidd “Update”) | [docs/updates.md](./docs/updates.md) |
 | Migration (`.config` → `printer_data`) | [docs/migration-printer-data.md](./docs/migration-printer-data.md) |
 | CI smoke / no-hardware host MCU | [docs/ci-smoke.md](./docs/ci-smoke.md) |
 | Frontends (Hub vs GHCR) | [docs/frontend-strategy.md](./docs/frontend-strategy.md) |
@@ -69,7 +70,7 @@ When things look good, stop the foreground session (`Ctrl+C`) and re-run the sam
 - Useful macros in [`config/client_macros.cfg`](./config/client_macros.cfg) and calibration helpers in [`config/calibration_macros.cfg`](./config/calibration_macros.cfg) — review before running on a real printer
 - ADXL345 example: [`docker-compose-adxl345.yml`](./docker-compose-adxl345.yml) · [docs/hardware/adxl345.md](./docs/hardware/adxl345.md)
 
-**Not in this image:** compiling `klipper.bin` for your MCU; floating automatic updates (refs pinned in `upstream.lock` / frontend release zips — see [docs/frontend-strategy.md](./docs/frontend-strategy.md)).
+**Not in this image:** compiling `klipper.bin` for your MCU; in-container Fluidd/Mainsail “Update” (Moonraker Update Manager is disabled — [docs/updates.md](./docs/updates.md); pins live in `upstream.lock` / frontend zips — [docs/frontend-strategy.md](./docs/frontend-strategy.md)).
 
 ## Credits
 
