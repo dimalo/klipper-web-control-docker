@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# No-MCU smoke asserts for klipper-web-control-docker.
+# Host-MCU smoke asserts for klipper-web-control-docker (no printer hardware).
 # Expects kwc-klipper:ci + kwc-fluidd:ci already built and compose stack up.
+# Linux MCU (klipper_mcu) provides /tmp/klipper_host_mcu for CI printer.cfg.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -10,6 +11,7 @@ MOONRAKER_URL="${MOONRAKER_URL:-http://127.0.0.1:7125}"
 UI_URL="${UI_URL:-http://127.0.0.1:8010}"
 WAIT_SECONDS="${WAIT_SECONDS:-120}"
 RESTART_WAIT_SECONDS="${RESTART_WAIT_SECONDS:-120}"
+KLIPPY_READY_SECONDS="${KLIPPY_READY_SECONDS:-120}"
 KLIPPER_CONTAINER="${KLIPPER_CONTAINER:-klipper}"
 
 # Match permission/path failures; callers should strip Moonraker .bkp lines first.
@@ -33,6 +35,14 @@ json_ok() {
   ' >/dev/null
 }
 
+server_info_field() {
+  local body="$1"
+  local field="$2"
+  echo "${body}" | jq -r --arg f "${field}" '
+    .result[$f] // .[$f] // empty
+  '
+}
+
 wait_moonraker() {
   local label="${1:-Moonraker}"
   local secs="${2:-${WAIT_SECONDS}}"
@@ -51,6 +61,45 @@ wait_moonraker() {
   fail "${label}: /server/info did not return HTTP 200 within ${secs}s"
 }
 
+wait_klippy_healthy() {
+  local label="${1:-klippy}"
+  local secs="${2:-${KLIPPY_READY_SECONDS}}"
+  # Logs to stderr so callers can capture JSON-only on stdout.
+  log "waiting up to ${secs}s for ${label}: klippy_connected=true and klippy_state in {ready,startup}" >&2
+  local deadline=$((SECONDS + secs))
+  local body="" connected="" state=""
+  while (( SECONDS < deadline )); do
+    if body="$(curl -sf --max-time 5 "${MOONRAKER_URL}/server/info" 2>/dev/null)"; then
+      connected="$(server_info_field "${body}" klippy_connected)"
+      state="$(server_info_field "${body}" klippy_state)"
+      if [[ "${connected}" == "true" ]] && [[ "${state}" == "ready" || "${state}" == "startup" ]]; then
+        # Prefer settling on ready when host MCU is wired; allow brief startup.
+        if [[ "${state}" == "ready" ]]; then
+          log "${label}: klippy_connected=true klippy_state=ready" >&2
+          printf '%s\n' "${body}"
+          return 0
+        fi
+        # startup is acceptable transiently; keep waiting for ready until deadline
+        log "${label}: connected, state=startup (waiting for ready)" >&2
+      fi
+    fi
+    sleep 2
+  done
+  # Final chance: accept startup if still connected at deadline (slow runners).
+  if body="$(curl -sf --max-time 5 "${MOONRAKER_URL}/server/info" 2>/dev/null)"; then
+    connected="$(server_info_field "${body}" klippy_connected)"
+    state="$(server_info_field "${body}" klippy_state)"
+    if [[ "${connected}" == "true" ]] && [[ "${state}" == "ready" || "${state}" == "startup" ]]; then
+      log "${label}: accepting klippy_connected=${connected} klippy_state=${state} at deadline" >&2
+      printf '%s\n' "${body}"
+      return 0
+    fi
+    log "${label}: last server/info connected=${connected:-?} state=${state:-?}" >&2
+    echo "${body}" | jq . >&2 || true
+  fi
+  fail "${label}: klippy not healthy (need connected=true and state in {ready,startup}) within ${secs}s"
+}
+
 assert_supervisor_running() {
   local label="${1:-supervisor}"
   log "checking supervisorctl status (${label})"
@@ -58,10 +107,20 @@ assert_supervisor_running() {
   status="$(docker exec "${KLIPPER_CONTAINER}" supervisorctl status 2>&1 || true)"
   printf '%s\n' "${status}"
   [[ -n "${status}" ]] || fail "${label}: supervisorctl status empty"
+  echo "${status}" | grep -E '^klipper_mcu[[:space:]]+' | grep -q RUNNING \
+    || fail "${label}: supervisor program 'klipper_mcu' not RUNNING (Linux host MCU)"
   echo "${status}" | grep -E '^klipper[[:space:]]+' | grep -q RUNNING \
     || fail "${label}: supervisor program 'klipper' not RUNNING"
   echo "${status}" | grep -E '^moonraker[[:space:]]+' | grep -q RUNNING \
     || fail "${label}: supervisor program 'moonraker' not RUNNING"
+}
+
+assert_host_mcu_socket() {
+  local label="${1:-host-mcu}"
+  log "checking ${label} socket /tmp/klipper_host_mcu"
+  docker exec "${KLIPPER_CONTAINER}" bash -lc \
+    'test -e /tmp/klipper_host_mcu || test -L /tmp/klipper_host_mcu' \
+    || fail "${label}: /tmp/klipper_host_mcu missing (klipper_mcu not up)"
 }
 
 post_json() {
@@ -100,7 +159,7 @@ else
   ' >/dev/null || fail "klipper and/or fluidd missing from compose ps json"
 fi
 
-# --- 2/3) wait for Moonraker /server/info ---------------------------------
+# --- 2) Moonraker up ------------------------------------------------------
 body="$(wait_moonraker "initial")"
 log "Moonraker /server/info:"
 echo "${body}" | jq '{
@@ -109,21 +168,30 @@ echo "${body}" | jq '{
   moonraker_version: (.result.moonraker_version // .moonraker_version // null)
 }' || true
 
-# --- 4) frontend proxies /server/info -------------------------------------
+# --- 3) supervisor + host MCU ---------------------------------------------
+sleep 2
+assert_supervisor_running "initial"
+assert_host_mcu_socket "initial"
+
+# --- 4) healthier Klippy (host MCU connected) -----------------------------
+body="$(wait_klippy_healthy "initial")"
+log "Klippy healthy /server/info:"
+echo "${body}" | jq '{
+  klippy_connected: (.result.klippy_connected // .klippy_connected // null),
+  klippy_state: (.result.klippy_state // .klippy_state // null)
+}' || true
+
+# --- 5) frontend proxies /server/info -------------------------------------
 log "checking UI proxy ${UI_URL}/server/info"
 proxy_body="$(curl -sf --max-time 5 "${UI_URL}/server/info")" \
   || fail "UI proxy /server/info failed (frontend→Moonraker wiring)"
 echo "${proxy_body}" | jq -e . >/dev/null || fail "UI proxy /server/info not JSON"
 
-# --- 5) UI static ---------------------------------------------------------
+# --- 6) UI static ---------------------------------------------------------
 log "checking UI static ${UI_URL}/"
 code="$(curl -sf -o /dev/null -w '%{http_code}' --max-time 5 "${UI_URL}/")" \
   || fail "UI root request failed"
 [[ "${code}" == "200" ]] || fail "UI root expected HTTP 200, got ${code}"
-
-# --- 6) supervisor programs RUNNING ---------------------------------------
-sleep 2
-assert_supervisor_running "initial"
 
 # --- 7) log gate (pre-management) -----------------------------------------
 log "scanning klipper container logs for forbidden patterns (pre-management)"
@@ -135,7 +203,6 @@ if echo "${filtered}" | grep -E "${FORBIDDEN_LOG_PATTERN}" >/dev/null; then
 fi
 
 # --- 8) file list APIs (config + gcodes) — #41/#63 regression gates -------
-# Write-enabled roots must list successfully under printer_data.
 log "GET /server/files/list?root=config (hard)"
 files="$(curl -sf --max-time 5 "${MOONRAKER_URL}/server/files/list?root=config")" \
   || fail "files/list?root=config failed (config path / write-access)"
@@ -153,7 +220,6 @@ echo "${gcodes}" | jq -e . >/dev/null || fail "files/list?root=gcodes not JSON"
 log "files/list?root=gcodes OK"
 
 # --- 9) gcode upload (soft → harden when stable) --------------------------
-# Soft: never fail the job on upload alone; list checks above catch write-disabled.
 log "optional: gcode upload (soft)"
 smoke_gcode="$(mktemp "${TMPDIR:-/tmp}/ci-smoke-XXXXXX.gcode")"
 printf '; ci-smoke upload probe\n' > "${smoke_gcode}"
@@ -169,7 +235,7 @@ else
   [[ -f /tmp/ci-smoke-upload.json ]] && cat /tmp/ci-smoke-upload.json >&2 || true
 fi
 
-# --- 10) hard: machine/system_info (safe no-MCU) --------------------------
+# --- 10) hard: machine/system_info ----------------------------------------
 log "GET /machine/system_info (hard)"
 sysinfo="$(curl -sf --max-time 10 "${MOONRAKER_URL}/machine/system_info")" \
   || fail "machine/system_info failed"
@@ -186,6 +252,8 @@ log "restart klipper accepted: ${restart_klipper}"
 sleep 3
 wait_moonraker "after klipper restart" "${RESTART_WAIT_SECONDS}" >/dev/null
 assert_supervisor_running "after klipper restart"
+assert_host_mcu_socket "after klipper restart"
+wait_klippy_healthy "after klipper restart" >/dev/null
 curl -sf --max-time 5 "${UI_URL}/server/info" >/dev/null \
   || fail "UI proxy /server/info failed after klipper restart"
 
@@ -204,6 +272,7 @@ fi
 sleep 3
 wait_moonraker "after moonraker restart" "${RESTART_WAIT_SECONDS}" >/dev/null
 assert_supervisor_running "after moonraker restart"
+wait_klippy_healthy "after moonraker restart" >/dev/null
 curl -sf --max-time 5 "${UI_URL}/server/info" >/dev/null \
   || fail "UI proxy /server/info failed after moonraker restart"
 
@@ -215,6 +284,8 @@ json_ok "${proxy_restart}" || fail "proxied restart unexpected body: ${proxy_res
 sleep 3
 wait_moonraker "after proxied klipper restart" "${RESTART_WAIT_SECONDS}" >/dev/null
 assert_supervisor_running "after proxied klipper restart"
+assert_host_mcu_socket "after proxied klipper restart"
+wait_klippy_healthy "after proxied klipper restart" >/dev/null
 
 # --- 14) final log gate ---------------------------------------------------
 log "scanning klipper container logs for forbidden patterns (final)"
@@ -225,5 +296,5 @@ if echo "${filtered}" | grep -E "${FORBIDDEN_LOG_PATTERN}" >/dev/null; then
   fail "forbidden pattern in container logs: ${FORBIDDEN_LOG_PATTERN}"
 fi
 
-log "SMOKE OK (no-MCU): boot + files/list config+gcodes + system_info + klipper/moonraker/proxied restarts"
+log "SMOKE OK (host MCU): klippy healthy + files/list + system_info + klipper/moonraker/proxied restarts"
 exit 0
