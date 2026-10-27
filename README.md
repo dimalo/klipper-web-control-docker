@@ -7,6 +7,8 @@
     - [Install the services](#install-the-services)
     - [If things are running fine now...](#if-things-are-running-fine-now)
     - [If things are not running...](#if-things-are-not-running)
+  - [Platforms](#platforms)
+  - [Hardware](#hardware)
   - [CI smoke (host MCU)](#ci-smoke-host-mcu)
   - [Migrating to printer_data](#migrating-to-printer_data)
   - [Features not implemented or not tested (yet)](#features-not-implemented-or-not-tested-yet)
@@ -19,14 +21,14 @@ __Klipper with Moonraker shipped with Fluidd and/or Mainsail__
 - Build with Github actions and deployed to https://hub.docker.com/u/dimalo
 - Docker multiarch builds with best practices
 
-> **Status:** Docker Hub [`dimalo/klipper-moonraker:latest`](https://hub.docker.com/r/dimalo/klipper-moonraker) is **stale (~2023)** — same lineage as GitHub `main` (~2022). Frontend Hub tags can look newer; that does **not** mean the core image is current.
+> **Status:** GitHub **`main`** includes the M1 ship (`printer_data` layout, CI smoke). Docker Hub [`dimalo/klipper-moonraker:latest`](https://hub.docker.com/r/dimalo/klipper-moonraker) **may still lag** git until multiarch republish succeeds — check Hub push dates before relying on `latest`. Frontend Hub tags can look newer than the core image.
 >
-> Until milestone **M1** merges smoke-tested `develop` → `main` and republishes Hub `latest`, prefer:
-> - the **`develop`** branch (includes the `printer_data` layout),
-> - Hub tag **`dimalo/klipper-moonraker:next`** (built from `develop`), or
-> - **building from source** with the Dockerfiles / Compose files in this repo.
+> Prefer:
+> - this repo’s **`main`** (or build from the Dockerfiles / Compose files here),
+> - Hub tag **`dimalo/klipper-moonraker:next`** only if its Hub date is acceptable, or
+> - wait for / verify a refreshed **`latest`**.
 >
-> Config/gcode paths use Moonraker’s **`printer_data`** layout. Upgrading from `/home/klippy/.config`? See [Migrating to printer_data](#migrating-to-printer_data).
+> Config/gcode paths use Moonraker’s **`printer_data`** layout. Upgrading from `/home/klippy/.config`? See [Migrating to printer_data](#migrating-to-printer-data).
 >
 > Host-MCU CI verification (Linux `klipper_mcu`, no printer hardware): [docs/ci-smoke.md](./docs/ci-smoke.md) · [`.github/workflows/ci-smoke.yml`](./.github/workflows/ci-smoke.yml) · [README section](#ci-smoke-host-mcu).
 
@@ -71,7 +73,8 @@ __Klipper with Moonraker shipped with Fluidd and/or Mainsail__
   - you can even run both in parallel!
 - only your printer.cfg is required
   - the services start without it, so you can supply your config through the web UI
-  - you can mount your config file to /home/klippy/.config/printer.cfg, and klipper will pick it up after a restart
+  - you can mount your config file to `/home/klippy/printer_data/config/printer.cfg`, and klipper will pick it up after a restart
+- ADXL345 / input-shaper example Compose: [`docker-compose-adxl345.yml`](./docker-compose-adxl345.yml) · [docs/hardware/adxl345.md](./docs/hardware/adxl345.md)
 
 ## Getting started
 
@@ -111,15 +114,9 @@ __Happy 3D Printing!__
 
 __No serial connection:__
 
-Check the permissions on the serial device in the klipper host.
+See the full checklist: **[docs/hardware/mcu-serial.md](./docs/hardware/mcu-serial.md)** (by-id paths, `devices:`, `group_add`, MacOS limitation, CI does not assert MCU ready).
 
-```ls -lsa /dev/ttyACM0```
-
-Supply the group permissions to the docker-compose config in docker-compose.yml build args for klipper.
-
-Run ```docker-compose build```
-
-After build run ```docker-compose up -d``` and see if it works.
+Quick start: on the host run `ls -l /dev/ttyACM0` (or your device), map it under `devices:` in Compose, and set matching numeric GIDs under `group_add` in `docker-compose.yml` (uncomment the example). Recreate with `docker compose up -d`. Prefer `group_add` over rebuilding with legacy device GID build-args.
 
 __Klipper is crashing:__
 
@@ -134,6 +131,21 @@ klipper | PermissionError: [Errno 1] Operation not permitted
 
 
 check your libseccomp version and update if needed (see [https://docs.linuxserver.io/faq#libseccomp](https://docs.linuxserver.io/faq#libseccomp))
+
+## Platforms
+
+Docs-only guides (same images; no platform-specific Hub product):
+
+- [Portainer stack](./docs/platforms/portainer.md) · example [`examples/portainer-stack.yml`](./examples/portainer-stack.yml) (#31)
+- [Multi-printer / Fluidd](./docs/platforms/multi-printer.md) (#34)
+- [Unraid Compose Manager](./docs/platforms/unraid.md) (#52)
+- [Synology Container Manager](./docs/platforms/synology.md) (#53)
+
+## Hardware
+
+- [MCU serial / device mapping](./docs/hardware/mcu-serial.md) (#59)
+- [ADXL345 / input shaper](./docs/hardware/adxl345.md) (#54)
+
 ## CI smoke (host MCU)
 
 Verify images build and the stack answers HTTP with the **Linux host MCU** (`klipper_mcu` → `/tmp/klipper_host_mcu`) and **no printer hardware**. Smoke requires `klippy_connected` and a healthy `klippy_state`. See [docs/ci-smoke.md](./docs/ci-smoke.md) for pass/fail details.

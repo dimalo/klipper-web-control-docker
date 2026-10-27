@@ -1,3 +1,6 @@
+# ADXL345 / SPI example — see docs/hardware/adxl345.md
+# Replace group_add GIDs with your host's `ls -l /dev/spidev* /dev/gpiomem` groups.
+# Not used by CI; validate on real Pi hardware. Hub latest may lag git main.
 services:
   klipper:
     image: dimalo/klipper-moonraker
@@ -26,7 +29,7 @@ services:
       # - <<your_config_path>>:/home/klippy/printer_data/config
       # - ./printer.cfg:/home/klippy/printer_data/config/printer.cfg
     # mount serial device - take care to grant sufficient permissions to the device: <host_dev>:<container_dev>
-    # put <container_dev> into your printer.cfg
+    # put <container_dev> into your printer.cfg (see docs/hardware/mcu-serial.md)
     devices:
     #   - /dev/ttyUSB0:/dev/ttyUSB0
       - /dev/spidev0.0:/dev/spidev0.0

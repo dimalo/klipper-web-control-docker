@@ -1,0 +1,46 @@
+# Portainer / Compose Manager stack — pull published images only (no local build).
+# Docs: docs/platforms/portainer.md
+#
+# Git main uses printer_data mounts. Hub dimalo/klipper-moonraker:latest may still
+# lag git; verify Hub push dates or build from this repo if needed.
+#
+# Edit: serial device path, optional group_add GIDs, and the config bind path.
+
+services:
+  klipper:
+    image: dimalo/klipper-moonraker:latest
+    container_name: klipper
+    restart: unless-stopped
+    ports:
+      - "7125:7125"
+    cap_add:
+      - SYS_NICE
+    # if the container cannot open the serial device, add host GIDs from `ls -l /dev/...`
+    # group_add:
+    #   - "20"
+    #   - "996"
+    volumes:
+      - gcode_files:/home/klippy/printer_data/gcodes
+      # Portainer: use an absolute host path or a named volume for config
+      - klipper_config:/home/klippy/printer_data/config
+      - moonraker_data:/home/klippy/printer_data/database
+    devices:
+      # host_path:container_path — put the container path in printer.cfg [mcu] serial:
+      - /dev/ttyUSB0:/dev/ttyUSB0
+
+  fluidd:
+    image: dimalo/fluidd:latest
+    container_name: fluidd
+    restart: unless-stopped
+    ports:
+      - "8010:80"
+    depends_on:
+      - klipper
+    # Nginx proxies one upstream (hostname "klipper" on the Compose network)
+    links:
+      - klipper:klipper
+
+volumes:
+  gcode_files:
+  klipper_config:
+  moonraker_data:
