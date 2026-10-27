@@ -1,6 +1,6 @@
 # CI smoke harness (no MCU)
 
-Verification loop for this repo: **build images → compose up → assert HTTP, supervisor, file/management APIs, and restarts**, without a printer.
+Verification loop for this repo: **build images → compose up → assert HTTP, supervisor, file/upload paths, management APIs, and restarts**, without a printer.
 
 ## What “green” means
 
@@ -11,7 +11,8 @@ Verification loop for this repo: **build images → compose up → assert HTTP, 
 | Nginx → Moonraker | `GET /server/info` via UI port → HTTP 200 |
 | Supervisor | `klipper` and `moonraker` programs **RUNNING** |
 | Logs | No permission errors on `moonraker.conf` / stale `.config/` paths (`.bkp` write noise ignored) |
-| File manager | `GET /server/files/list?root=config` → HTTP 200 + JSON |
+| Files API | `GET /server/files/list?root=config` and `?root=gcodes` → HTTP 200 + JSON (#41/#63 path gates) |
+| Upload (soft) | `POST /server/files/upload` of a tiny gcode → logs OK/soft-fail (not a hard gate yet) |
 | Machine info | `GET /machine/system_info` → HTTP 200 + JSON |
 | Restart Klipper | `POST /machine/services/restart` `{"service":"klipper"}` → accepted; then `/server/info` 200 and supervisor RUNNING again |
 | Restart Moonraker | `POST /server/restart` → process recovers; `/server/info` 200 and supervisor RUNNING again |

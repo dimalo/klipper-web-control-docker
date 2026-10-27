@@ -19,9 +19,10 @@ services:
       # be aware to create your own branch if you mount the config folder as it will be updated on the main branch
       # that way you can merge upstream changes to your customized configs
       - ./config:/home/klippy/printer_data/config
-      - moonraker_data:/home/klippy/.moonraker_database
-      # - <<your_config_path>>:/home/klippy/.config
-      # - ./printer.cfg:/home/klippy/.config/printer.cfg
+      # Moonraker -d printer_data uses printer_data/database (not ~/.moonraker_database)
+      - moonraker_data:/home/klippy/printer_data/database
+      # - <<your_config_path>>:/home/klippy/printer_data/config
+      # - ./printer.cfg:/home/klippy/printer_data/config/printer.cfg
     # mount serial device - take care to grant sufficient permissions to the device: <host_dev>:<container_dev>
     # put <container_dev> into your printer.cfg
       
@@ -47,12 +48,11 @@ services:
   #   restart: unless-stopped
   #   volumes:
   #     # Let both klipper instances use the same storage for gcode files
-  #     - gcode_files:/home/klippy/gcode_files
+  #     - gcode_files:/home/klippy/printer_data/gcodes
   #     # be aware to create your own branch if you mount the config folder as it will be updated on the main branch
   #     # that way you can merge upstream changes to your (developed) configs...
-  #     - ./config_another_printer:/home/klippy/.config
-  #     # - <<your_config_path>>:/home/klippy/.config
-  #     # - ./another_printer.cfg:/home/klippy/.config/printer.cfg
+  #     - ./config_another_printer:/home/klippy/printer_data/config
+  #     - moonraker_data_another:/home/klippy/printer_data/database
   #   # mount serial device - take care to grant sufficient permissions to the device: <host_dev>:<container_dev>
   #   # put <container_dev> into your printer.cfg
   #   devices:

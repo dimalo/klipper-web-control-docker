@@ -134,27 +134,49 @@ if echo "${filtered}" | grep -E "${FORBIDDEN_LOG_PATTERN}" >/dev/null; then
   fail "forbidden pattern in container logs: ${FORBIDDEN_LOG_PATTERN}"
 fi
 
-# --- 8) hard: config file list (management / file manager) ----------------
+# --- 8) file list APIs (config + gcodes) — #41/#63 regression gates -------
+# Write-enabled roots must list successfully under printer_data.
 log "GET /server/files/list?root=config (hard)"
 files="$(curl -sf --max-time 5 "${MOONRAKER_URL}/server/files/list?root=config")" \
-  || fail "files/list?root=config failed"
-echo "${files}" | jq -e '.result != null or type=="object"' >/dev/null \
-  || fail "files/list?root=config unexpected JSON"
+  || fail "files/list?root=config failed (config path / write-access)"
+echo "${files}" | jq -e . >/dev/null || fail "files/list?root=config not JSON"
 if echo "${files}" | jq -e 'tostring | test("moonraker\\.conf|printer\\.cfg|client\\.cfg")' >/dev/null; then
   log "files/list includes expected config filenames"
 else
   log "note: listing JSON did not obviously include known filenames (continuing)"
 fi
 
+log "GET /server/files/list?root=gcodes (hard)"
+gcodes="$(curl -sf --max-time 5 "${MOONRAKER_URL}/server/files/list?root=gcodes")" \
+  || fail "files/list?root=gcodes failed (virtual_sdcard / gcodes path)"
+echo "${gcodes}" | jq -e . >/dev/null || fail "files/list?root=gcodes not JSON"
+log "files/list?root=gcodes OK"
 
-# --- 9) hard: machine/system_info (safe no-MCU) ---------------------------
+# --- 9) gcode upload (soft → harden when stable) --------------------------
+# Soft: never fail the job on upload alone; list checks above catch write-disabled.
+log "optional: gcode upload (soft)"
+smoke_gcode="$(mktemp "${TMPDIR:-/tmp}/ci-smoke-XXXXXX.gcode")"
+printf '; ci-smoke upload probe\n' > "${smoke_gcode}"
+upload_code="$(curl -s -o /tmp/ci-smoke-upload.json -w '%{http_code}' --max-time 15 \
+  -F "file=@${smoke_gcode};filename=ci-smoke-upload.gcode" \
+  -F "root=gcodes" \
+  "${MOONRAKER_URL}/server/files/upload" || true)"
+rm -f "${smoke_gcode}"
+if [[ "${upload_code}" == "201" ]] && jq -e . /tmp/ci-smoke-upload.json >/dev/null 2>&1; then
+  log "gcode upload OK (HTTP 201)"
+else
+  log "gcode upload not OK yet (HTTP ${upload_code:-curl-fail}) — soft, not failing"
+  [[ -f /tmp/ci-smoke-upload.json ]] && cat /tmp/ci-smoke-upload.json >&2 || true
+fi
+
+# --- 10) hard: machine/system_info (safe no-MCU) --------------------------
 log "GET /machine/system_info (hard)"
 sysinfo="$(curl -sf --max-time 10 "${MOONRAKER_URL}/machine/system_info")" \
   || fail "machine/system_info failed"
 echo "${sysinfo}" | jq -e '.result != null or .system_info != null or type=="object"' >/dev/null \
   || fail "machine/system_info unexpected JSON"
 
-# --- 10) hard: restart Klipper via Moonraker machine API ------------------
+# --- 11) hard: restart Klipper via Moonraker machine API ------------------
 log "POST /machine/services/restart service=klipper"
 RESTART_PAYLOAD='{"service":"klipper"}'
 restart_klipper="$(post_json "${MOONRAKER_URL}/machine/services/restart" "${RESTART_PAYLOAD}")" \
@@ -167,7 +189,7 @@ assert_supervisor_running "after klipper restart"
 curl -sf --max-time 5 "${UI_URL}/server/info" >/dev/null \
   || fail "UI proxy /server/info failed after klipper restart"
 
-# --- 11) hard: soft-restart Moonraker itself ------------------------------
+# --- 12) hard: soft-restart Moonraker itself ------------------------------
 log "POST /server/restart"
 # server/restart often drops the HTTP connection; recover is what matters.
 set +e
@@ -185,7 +207,7 @@ assert_supervisor_running "after moonraker restart"
 curl -sf --max-time 5 "${UI_URL}/server/info" >/dev/null \
   || fail "UI proxy /server/info failed after moonraker restart"
 
-# --- 12) hard: same restart path via Fluidd nginx proxy -------------------
+# --- 13) hard: same restart path via Fluidd nginx proxy -------------------
 log "POST ${UI_URL}/machine/services/restart service=klipper (via UI proxy)"
 proxy_restart="$(post_json "${UI_URL}/machine/services/restart" "${RESTART_PAYLOAD}")" \
   || fail "proxied machine/services/restart klipper failed"
@@ -194,7 +216,7 @@ sleep 3
 wait_moonraker "after proxied klipper restart" "${RESTART_WAIT_SECONDS}" >/dev/null
 assert_supervisor_running "after proxied klipper restart"
 
-# --- 13) final log gate ---------------------------------------------------
+# --- 14) final log gate ---------------------------------------------------
 log "scanning klipper container logs for forbidden patterns (final)"
 logs="$(docker logs "${KLIPPER_CONTAINER}" 2>&1 || true)"
 filtered="$(echo "${logs}" | grep -v '\.bkp' || true)"
@@ -203,5 +225,5 @@ if echo "${filtered}" | grep -E "${FORBIDDEN_LOG_PATTERN}" >/dev/null; then
   fail "forbidden pattern in container logs: ${FORBIDDEN_LOG_PATTERN}"
 fi
 
-log "SMOKE OK (no-MCU): info/UI/supervisor + files/list + system_info + klipper restart + moonraker restart + proxied restart"
+log "SMOKE OK (no-MCU): boot + files/list config+gcodes + system_info + klipper/moonraker/proxied restarts"
 exit 0
