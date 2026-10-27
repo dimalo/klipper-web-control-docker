@@ -5,6 +5,7 @@ services:
       dockerfile: ./klipper/Dockerfile
       context: .
     # if klipper cannot connect to the printer check permissions on rpi then add the group here
+    # see docs/hardware/mcu-serial.md
     # group_add:
     #   - "996"
     #   - "998"
@@ -31,6 +32,7 @@ services:
 
   ##################################################################
   # Example config for a second printer on a different serial port
+  # Docs: docs/platforms/multi-printer.md (Fluidd is single-upstream by default)
   ##################################################################
 
   # klipper_another_printer:
