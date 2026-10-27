@@ -11,6 +11,8 @@ Phase 0 verification loop for this repo: **build images → compose up → asser
 | Nginx → Moonraker | `GET http://127.0.0.1:8010/server/info` → HTTP 200 |
 | Supervisor | `klipper` and `moonraker` programs **RUNNING** |
 | Logs | No permission errors on `moonraker.conf` / stale `.config/` paths (`.bkp` write noise ignored) |
+| Files API | `GET /server/files/list?root=config` and `?root=gcodes` → HTTP 200 + JSON |
+| Upload (soft) | `POST /server/files/upload` of a tiny gcode → logs OK/soft-fail (not a hard gate yet) |
 
 **Not** asserted in CI: `klippy_state == ready`, homing, printing, ADXL, webcams.
 
