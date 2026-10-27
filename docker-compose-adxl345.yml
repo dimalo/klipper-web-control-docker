@@ -58,6 +58,8 @@ services:
   #     # that way you can merge upstream changes to your (developed) configs...
   #     - ./config_another_printer:/home/klippy/printer_data/config
   #     - moonraker_data_another:/home/klippy/printer_data/database
+  #     # - <<your_config_path>>:/home/klippy/printer_data/config
+  #     # - ./another_printer.cfg:/home/klippy/printer_data/config/printer.cfg
   #   # mount serial device - take care to grant sufficient permissions to the device: <host_dev>:<container_dev>
   #   # put <container_dev> into your printer.cfg
   #   devices:
@@ -100,4 +102,3 @@ services:
 volumes: 
   gcode_files:
   moonraker_data:
-

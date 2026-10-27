@@ -40,19 +40,36 @@ switch to the new targets **before** recreating containers.
 3. **Moonraker** — prefer the repo’s `config/moonraker.conf`; drop obsolete `config_path` / `database_path` keys if you still carry an ancient conf.
 4. **Host MCU** — `config/host_mcu.cfg` still expects `/tmp/klipper_host_mcu` when enabled; that is separate from USB printer serial.
 
+## Convenient migration script
+
+Use [`scripts/migrate-printer-data.sh`](../scripts/migrate-printer-data.sh) to rewrite compose volume targets, `virtual_sdcard` paths, and drop legacy Moonraker `config_path` / `database_path` lines.
+
+```bash
+# Preview (no writes)
+./scripts/migrate-printer-data.sh
+
+# Stop the stack, then apply (writes + timestamped backups under .migration-backup-*)
+docker compose down
+./scripts/migrate-printer-data.sh --apply
+```
+
+Optional: `--root /path/to/checkout` if you are not running from the repo root. The script does **not** pull images or start containers.
+
 ## Upgrade procedure (recommended)
 
 ```bash
 # 1) Stop stack
 docker compose down
 
-# 2) Backup host config + gcodes
+# 2) Preview + apply path migration (backs up touched files)
+./scripts/migrate-printer-data.sh
+./scripts/migrate-printer-data.sh --apply
+
+# Optional extra full-tree backup of config/
 cp -a ./config "./config.backup-$(date +%Y%m%d)"
-# if you used a named volume for gcodes, back it up too
 
 # 3) Pull this release (after merge) or rebuild
 git pull   # or checkout the shipped main
-# Edit compose mounts as above if you have a custom override
 
 # 4) Pull/build images and start
 docker compose pull   # or: docker compose build

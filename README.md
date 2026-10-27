@@ -150,7 +150,16 @@ GitHub Actions workflow: `.github/workflows/ci-smoke.yml`.
 
 ## Migrating to printer_data
 
-Upgrading from pre-`printer_data` images or compose files? See **[docs/migration-printer-data.md](./docs/migration-printer-data.md)** for path mapping, compose volume changes, and a recommended upgrade order.
+Upgrading from pre-`printer_data` images or compose files? See **[docs/migration-printer-data.md](./docs/migration-printer-data.md)** for path mapping and upgrade order.
+
+Quick helper (dry-run first):
+
+```bash
+./scripts/migrate-printer-data.sh          # preview
+docker compose down
+./scripts/migrate-printer-data.sh --apply  # rewrite compose + configs (with backups)
+docker compose pull && docker compose up -d
+```
 
 ## Features not implemented or not tested (yet)
 - compiling klipper.bin for your printer (will need compile tools which bloat the image so this will likely not be implemented)
