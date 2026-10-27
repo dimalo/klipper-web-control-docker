@@ -5,10 +5,10 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.1] - Unreleased
+## [2.0.1] - 2026-10-27
 
-Proposed patch after 2.0.0: correct Docker update UX. **Do not cut a git tag
-until the maintainer confirms** the version number (2.0.1 vs 2.1.0).
+Patch release: correct Docker update UX so Fluidd/Mainsail no longer steer users
+toward in-container git updates that fight image pins ([#77](https://github.com/dimalo/klipper-web-control-docker/pull/77)).
 
 ### Fixed
 
@@ -21,14 +21,6 @@ until the maintainer confirms** the version number (2.0.1 vs 2.1.0).
 
 - [docs/updates.md](./docs/updates.md) — how to update this stack
   (`docker compose pull` / rebuild; bump pins via PR + CI smoke).
-
-### Version rationale
-
-- Prefer **2.0.1** (patch): behavior/docs fix for an already-documented
-  non-feature (“automatic updates” were never supported); no mount or API
-  layout break.
-- Prefer **2.1.0** only if you want to treat “Update Manager removed from
-  stock conf” as a user-visible capability change rather than a bugfix.
 
 ## [2.0.0] - 2026-10-27
 
@@ -83,4 +75,5 @@ host-MCU CI smoke, platform/hardware docs, and dependency hygiene for reproducib
 
 - Gate for this release line: **CI smoke (host MCU)** on pull requests and pushes to `main`.
 
-[2.0.0]: https://github.com/dimalo/klipper-web-control-docker/releases/tag/v2.0.0
+[2.0.1]: https://github.com/dimalo/klipper-web-control-docker/releases/tag/2.0.1
+[2.0.0]: https://github.com/dimalo/klipper-web-control-docker/releases/tag/2.0.0
