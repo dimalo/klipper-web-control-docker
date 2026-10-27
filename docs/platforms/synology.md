@@ -12,7 +12,7 @@ Related: [#53](https://github.com/dimalo/klipper-web-control-docker/issues/53).
 
 ## Images / tags
 
-Git **`main`** ships `printer_data` (M1). Docker Hub **`dimalo/klipper-moonraker:latest` may still lag** that git tree — verify Hub push dates, pull `:next` only if its date is acceptable, or build from this repository on an amd64/arm64 host and load the image onto the NAS.
+Git **`main` / `v2.0.0`** ships `printer_data`. Hub tags may lag git — see [README Status / images](../../README.md#status--images). Build from this repository on an amd64/arm64 host and load the image onto the NAS if you prefer not to trust Hub.
 
 Frontend: `dimalo/fluidd`.
 
@@ -25,7 +25,7 @@ Create a project from Compose (same shape as [Unraid](./unraid.md) and [`example
 | Moonraker | **7125** | Required for API / Fluidd proxy |
 | Fluidd | **8010** → `80` | Web UI |
 
-Volume targets (post-M1):
+Volume targets (`printer_data`):
 
 ```yaml
 volumes:
@@ -57,7 +57,7 @@ Prefer `/dev/serial/by-id/…` on the host so reconnects keep a stable path.
 2. Place `printer.cfg` in the mounted config directory
 3. Confirm `http://<nas-ip>:7125/server/info`
 
-Retest on images built from current **`main`** (or refreshed Hub `latest`). Hardware and DSM USB behavior are **not** covered by GitHub Actions smoke.
+Retest on images from current **`main`** (or a Hub tag you verified). Hardware and DSM USB behavior are **not** covered by GitHub Actions smoke.
 
 ## Also see
 

@@ -1,5 +1,7 @@
 # Frontend image strategy
 
+Hub vs git tags: see [README Status / images](../README.md#status--images).
+
 Near-term (2.0.x): keep custom Hub images `dimalo/fluidd` and `dimalo/mainsail`
 (Alpine unzip + Nginx template for `KLIPPER_HOST` / mjpg upstreams).
 
