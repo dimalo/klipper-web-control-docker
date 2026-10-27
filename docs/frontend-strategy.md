@@ -18,6 +18,8 @@ Release zips are pinned in [`upstream.lock`](../upstream.lock) and as
 
 Bump by editing `upstream.lock`, the frontend Dockerfile default (Fluidd),
 and the Fluidd/Mainsail multiarch workflow `build-args`, then run CI smoke.
+End users update frontends by **repulling/rebuilding images**, not Fluidd/Mainsail
+Update Manager — see [docs/updates.md](./updates.md).
 
 ## Later options (not default)
 
