@@ -8,6 +8,7 @@
     - [If things are running fine now...](#if-things-are-running-fine-now)
     - [If things are not running...](#if-things-are-not-running)
   - [CI smoke (host MCU)](#ci-smoke-host-mcu)
+  - [Migrating to printer_data](#migrating-to-printer_data)
   - [Features not implemented or not tested (yet)](#features-not-implemented-or-not-tested-yet)
   - [Credits](#credits)
 # klipper-web-control-docker
@@ -24,6 +25,8 @@ __Klipper with Moonraker shipped with Fluidd and/or Mainsail__
 > - the **`develop`** branch (includes the `printer_data` layout),
 > - Hub tag **`dimalo/klipper-moonraker:next`** (built from `develop`), or
 > - **building from source** with the Dockerfiles / Compose files in this repo.
+>
+> Config/gcode paths use Moonraker’s **`printer_data`** layout. Upgrading from `/home/klippy/.config`? See [Migrating to printer_data](#migrating-to-printer_data).
 >
 > Host-MCU CI verification (Linux `klipper_mcu`, no printer hardware): [docs/ci-smoke.md](./docs/ci-smoke.md) · [`.github/workflows/ci-smoke.yml`](./.github/workflows/ci-smoke.yml) · [README section](#ci-smoke-host-mcu).
 
@@ -144,6 +147,10 @@ docker compose -f docker-compose.ci.yml down -v
 ```
 
 GitHub Actions workflow: `.github/workflows/ci-smoke.yml`.
+
+## Migrating to printer_data
+
+Upgrading from pre-`printer_data` images or compose files? See **[docs/migration-printer-data.md](./docs/migration-printer-data.md)** for path mapping, compose volume changes, and a recommended upgrade order.
 
 ## Features not implemented or not tested (yet)
 - compiling klipper.bin for your printer (will need compile tools which bloat the image so this will likely not be implemented)
