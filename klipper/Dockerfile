@@ -150,9 +150,24 @@ RUN pip install --no-index -f ${WHEELS} supervisord-dependent-startup gpiod nump
 USER ${USER}
 WORKDIR ${HOME}
 
-RUN mkdir -p ${DATA_DIR}/gcodes ${CONFIG_DIR} ${HOME}/.klipper_repo_backup ${HOME}/.moonraker_repo_backup ${HOME}/.moonraker_database
-VOLUME ${DATA_DIR}
-VOLUME ${HOME}/.moonraker_database 
+# Moonraker data-folder layout (see moonraker docs). Avoid VOLUMEing the whole
+# printer_data tree — that creates an anonymous volume which hides subdirectory
+# mounts and left the legacy ~/.moonraker_database volume unused while the
+# real DB lived under printer_data/database.
+RUN mkdir -p \
+        ${DATA_DIR}/gcodes \
+        ${CONFIG_DIR} \
+        ${DATA_DIR}/database \
+        ${DATA_DIR}/logs \
+        ${DATA_DIR}/certs \
+        ${DATA_DIR}/misc \
+        ${DATA_DIR}/comms \
+        ${DATA_DIR}/backup \
+        ${DATA_DIR}/systemd \
+        ${HOME}/.klipper_repo_backup \
+        ${HOME}/.moonraker_repo_backup
+VOLUME ${DATA_DIR}/gcodes
+VOLUME ${DATA_DIR}/database
 
 EXPOSE 7125
 

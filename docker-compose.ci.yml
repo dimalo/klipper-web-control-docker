@@ -27,7 +27,7 @@ services:
       # rw: Moonraker may write config backups under printer_data/config
       - ./config/ci:/home/klippy/printer_data/config
       - gcode_files:/home/klippy/printer_data/gcodes
-      - moonraker_data:/home/klippy/.moonraker_database
+      - moonraker_data:/home/klippy/printer_data/database
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://127.0.0.1:7125/server/info"]
       interval: 5s

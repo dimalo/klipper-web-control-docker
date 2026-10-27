@@ -106,13 +106,38 @@ if echo "${filtered}" | grep -E "${FORBIDDEN_LOG_PATTERN}" >/dev/null; then
   fail "forbidden pattern in container logs: ${FORBIDDEN_LOG_PATTERN}"
 fi
 
-# --- 8) optional file API (soft) ------------------------------------------
-log "optional: config file list API (soft)"
-if files="$(curl -sf --max-time 5 "${MOONRAKER_URL}/server/files/list?root=config" 2>/dev/null)"; then
-  echo "${files}" | jq -e . >/dev/null && log "files/list?root=config OK" || log "files/list returned non-JSON (soft)"
+# --- 8) file list APIs (config + gcodes) ----------------------------------
+# Regression gate for path/upload issues (#41, #63): write-enabled roots must
+# list successfully under printer_data.
+log "checking files/list?root=config"
+files="$(curl -sf --max-time 5 "${MOONRAKER_URL}/server/files/list?root=config")" \
+  || fail "files/list?root=config failed (config path / write-access)"
+echo "${files}" | jq -e . >/dev/null || fail "files/list?root=config not JSON"
+log "files/list?root=config OK"
+
+log "checking files/list?root=gcodes"
+gcodes="$(curl -sf --max-time 5 "${MOONRAKER_URL}/server/files/list?root=gcodes")" \
+  || fail "files/list?root=gcodes failed (virtual_sdcard / gcodes path)"
+echo "${gcodes}" | jq -e . >/dev/null || fail "files/list?root=gcodes not JSON"
+log "files/list?root=gcodes OK"
+
+# --- 9) gcode upload (soft → harden when stable) --------------------------
+# Soft: never fail the job on upload alone, but print a clear pass/fail line.
+# Upload is the #41/#63 symptom; list checks above already catch write-disabled.
+log "optional: gcode upload (soft)"
+smoke_gcode="$(mktemp "${TMPDIR:-/tmp}/ci-smoke-XXXXXX.gcode")"
+printf '; ci-smoke upload probe\n' > "${smoke_gcode}"
+upload_code="$(curl -s -o /tmp/ci-smoke-upload.json -w '%{http_code}' --max-time 15 \
+  -F "file=@${smoke_gcode};filename=ci-smoke-upload.gcode" \
+  -F "root=gcodes" \
+  "${MOONRAKER_URL}/server/files/upload" || true)"
+rm -f "${smoke_gcode}"
+if [[ "${upload_code}" == "201" ]] && jq -e . /tmp/ci-smoke-upload.json >/dev/null 2>&1; then
+  log "gcode upload OK (HTTP 201)"
 else
-  log "files/list?root=config not available yet (soft — not failing)"
+  log "gcode upload not OK yet (HTTP ${upload_code:-curl-fail}) — soft, not failing"
+  [[ -f /tmp/ci-smoke-upload.json ]] && cat /tmp/ci-smoke-upload.json >&2 || true
 fi
 
-log "SMOKE OK (no-MCU): Moonraker HTTP 200, UI 200, proxy /server/info 200, supervisor RUNNING, log gates clean"
+log "SMOKE OK (no-MCU): Moonraker HTTP 200, UI 200, proxy /server/info 200, supervisor RUNNING, log gates clean, files/list config+gcodes OK"
 exit 0
