@@ -2,3 +2,6 @@ printer.cfg
 !config/printer.cfg
 .config
 build
+# Moonraker runtime backups under CI mount
+config/ci/.*.bkp
+config/ci/*.bkp
