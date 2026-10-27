@@ -1,4 +1,4 @@
-name: CI smoke (no MCU)
+name: CI smoke (host MCU)
 
 on:
   push:

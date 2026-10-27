@@ -1,5 +1,8 @@
-# Standalone CI / no-MCU smoke stack (approach A).
+# Standalone CI / no-printer-hardware smoke stack.
 # Does NOT merge with docker-compose.yml so host `devices:` are never inherited.
+#
+# Uses the in-container Linux host MCU (klipper_mcu → /tmp/klipper_host_mcu)
+# so Klippy can reach a real connected state without USB serial hardware.
 #
 # Fluidd uses `network_mode: service:klipper` so Nginx proxies to Moonraker on
 # 127.0.0.1 (avoids brittle Docker bridge ICC; still validates the proxy path).
@@ -28,6 +31,9 @@ services:
       - ./config/ci:/home/klippy/printer_data/config
       - gcode_files:/home/klippy/printer_data/gcodes
       - moonraker_data:/home/klippy/printer_data/database
+      # CI supervisor overrides: host MCU without -r; klipper waits for it
+      - ./ci/supervisor/klipper_mcu.ini:/etc/supervisor/conf.d/klipper_mcu.ini:ro
+      - ./ci/supervisor/klipper.ini:/etc/supervisor/conf.d/klipper.ini:ro
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://127.0.0.1:7125/server/info"]
       interval: 5s

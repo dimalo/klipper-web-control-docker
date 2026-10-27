@@ -1,31 +1,44 @@
-# CI smoke harness (no MCU)
+# CI smoke harness (Linux host MCU, no printer)
 
-Verification loop for this repo: **build images → compose up → assert HTTP, supervisor, file/upload paths, management APIs, and restarts**, without a printer.
+Verification loop for this repo: **build images → compose up → assert HTTP, Linux host MCU, healthier Klippy, file/upload paths, management APIs, and restarts**, without USB printer hardware.
+
+## Host MCU in CI
+
+CI does **not** use a dummy missing serial. Instead:
+
+| Piece | CI behavior |
+| --- | --- |
+| `klipper_mcu` | Started by supervisord (`ci/supervisor/klipper_mcu.ini`). Runs **without** `-r` because many CI/Docker hosts reject `sched_setscheduler` even with `SYS_NICE`. |
+| Socket | `/tmp/klipper_host_mcu` (same path as `config/host_mcu.cfg`) |
+| `config/ci/printer.cfg` | Primary `[mcu]` → `serial: /tmp/klipper_host_mcu`, `kinematics: none` |
+| Klipper start order | `ci/supervisor/klipper.ini` waits for `klipper_mcu:running` before starting Klipper |
 
 ## What “green” means
 
 | Check | Pass criteria |
 | --- | --- |
 | Moonraker | `GET /server/info` → HTTP 200 + JSON |
+| Supervisor | `klipper_mcu`, `klipper`, and `moonraker` programs **RUNNING** |
+| Host MCU socket | `/tmp/klipper_host_mcu` exists inside the klipper container |
+| Klippy healthy | `klippy_connected == true` **and** `klippy_state` in `{ready, startup}` (script prefers `ready`; accepts `startup` at deadline) — asserted after boot **and** after each restart recovery |
 | Fluidd UI | `GET /` → HTTP 200 |
 | Nginx → Moonraker | `GET /server/info` via UI port → HTTP 200 |
-| Supervisor | `klipper` and `moonraker` programs **RUNNING** |
 | Logs | No permission errors on `moonraker.conf` / stale `.config/` paths (`.bkp` write noise ignored) |
 | Files API | `GET /server/files/list?root=config` and `?root=gcodes` → HTTP 200 + JSON (#41/#63 path gates) |
 | Upload (soft) | `POST /server/files/upload` of a tiny gcode → logs OK/soft-fail (not a hard gate yet) |
 | Machine info | `GET /machine/system_info` → HTTP 200 + JSON |
-| Restart Klipper | `POST /machine/services/restart` `{"service":"klipper"}` → accepted; then `/server/info` 200 and supervisor RUNNING again |
-| Restart Moonraker | `POST /server/restart` → process recovers; `/server/info` 200 and supervisor RUNNING again |
-| Proxied restart | Same Klipper restart through Fluidd Nginx (`UI/machine/services/restart`) |
+| Restart Klipper | `POST /machine/services/restart` `{"service":"klipper"}` → accepted; then Moonraker up, supervisor RUNNING, host MCU socket present, Klippy healthy again |
+| Restart Moonraker | `POST /server/restart` → process recovers; Klippy healthy again |
+| Proxied restart | Same Klipper restart through Fluidd Nginx (`UI/machine/services/restart`) + Klippy healthy |
 
-**Out of scope (no MCU / not asserted):**
+**Out of scope (not asserted):**
 
-- `klippy_state == ready`
 - Homing, printing, extrusion, bed mesh
-- ADXL345 / SPI / GPIO
+- ADXL345 / SPI / GPIO bit-banging beyond host MCU process stay-up
 - Webcam / mjpg-streamer healthy
 - Host reboot/shutdown (`/machine/reboot`, `/machine/shutdown`)
 - Firmware flash / update_manager installs
+- Realtime scheduling for `klipper_mcu` (`-r` / `SCHED_FIFO`)
 
 ## CI Moonraker machine provider
 

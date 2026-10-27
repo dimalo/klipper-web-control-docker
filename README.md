@@ -7,7 +7,7 @@
     - [Install the services](#install-the-services)
     - [If things are running fine now...](#if-things-are-running-fine-now)
     - [If things are not running...](#if-things-are-not-running)
-  - [CI smoke (no MCU)](#ci-smoke-no-mcu)
+  - [CI smoke (host MCU)](#ci-smoke-host-mcu)
   - [Features not implemented or not tested (yet)](#features-not-implemented-or-not-tested-yet)
   - [Credits](#credits)
 # klipper-web-control-docker
@@ -25,7 +25,7 @@ __Klipper with Moonraker shipped with Fluidd and/or Mainsail__
 > - Hub tag **`dimalo/klipper-moonraker:next`** (built from `develop`), or
 > - **building from source** with the Dockerfiles / Compose files in this repo.
 >
-> No-MCU verification: [docs/ci-smoke.md](./docs/ci-smoke.md) · [`.github/workflows/ci-smoke.yml`](./.github/workflows/ci-smoke.yml) · [README section](#ci-smoke-no-mcu).
+> Host-MCU CI verification (Linux `klipper_mcu`, no printer hardware): [docs/ci-smoke.md](./docs/ci-smoke.md) · [`.github/workflows/ci-smoke.yml`](./.github/workflows/ci-smoke.yml) · [README section](#ci-smoke-host-mcu).
 
 ## Features
 - Dockerhub images support x64, ARM64, ARM32v7 & ARM32v6
@@ -131,9 +131,9 @@ klipper | PermissionError: [Errno 1] Operation not permitted
 
 
 check your libseccomp version and update if needed (see [https://docs.linuxserver.io/faq#libseccomp](https://docs.linuxserver.io/faq#libseccomp))
-## CI smoke (no MCU)
+## CI smoke (host MCU)
 
-Verify images build and the stack answers HTTP **without** a serial printer. See [docs/ci-smoke.md](./docs/ci-smoke.md) for pass/fail details.
+Verify images build and the stack answers HTTP with the **Linux host MCU** (`klipper_mcu` → `/tmp/klipper_host_mcu`) and **no printer hardware**. Smoke requires `klippy_connected` and a healthy `klippy_state`. See [docs/ci-smoke.md](./docs/ci-smoke.md) for pass/fail details.
 
 ```bash
 DOCKER_BUILDKIT=1 docker build -f klipper/Dockerfile -t kwc-klipper:ci .
