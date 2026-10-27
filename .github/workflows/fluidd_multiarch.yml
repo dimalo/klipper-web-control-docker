@@ -4,8 +4,18 @@ on:
   push:
     branches:
       - main
+    tags:
+      # Hub version tags: accept both 2.0.0 and v2.0.0 (git release chaos).
+      - "[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+"
   schedule:
     - cron: "42 13 * * 0,2,5"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Optional Hub semver tag to publish (e.g. 2.0.0). Leave empty for latest+date only."
+        required: false
+        type: string
 
 jobs:
   docker:
@@ -26,14 +36,19 @@ jobs:
 
       - name: Prepare
         id: prep
+        env:
+          DISPATCH_VERSION: ${{ github.event.inputs.version }}
         run: |
           DOCKER_IMAGE=${{ secrets.DOCKER_USERNAME }}/fluidd
           VERSION=latest
           DATE=${{ steps.date.outputs.date }}
 
-          # If this is git tag, use the tag name as a docker tag
+          # Git tag push: strip optional leading "v" (handles 2.0.0 and v2.0.0).
           if [[ $GITHUB_REF == refs/tags/* ]]; then
-            VERSION=${GITHUB_REF#refs/tags/v}
+            VERSION=${GITHUB_REF#refs/tags/}
+            VERSION=${VERSION#v}
+          elif [[ -n "${DISPATCH_VERSION:-}" ]]; then
+            VERSION=${DISPATCH_VERSION#v}
           fi
           TAGS="${DOCKER_IMAGE}:${VERSION},${DOCKER_IMAGE}:${DATE}"
 
